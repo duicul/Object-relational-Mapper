@@ -1,7 +1,10 @@
 package database;
 
+import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
@@ -36,124 +39,47 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public boolean create() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public List<Object> read(TableData current, Criteria c) throws ClassNotFoundException, SQLException {
 		List<Object> lo = new LinkedList<Object>();
 		Connection con = this.getConnection();
 		Statement stmt = con.createStatement();
 		String sql = "SELECT * FROM " + current.table.name();
 		sql += " WHERE ";
-		sql +=c.getCriteriaText();
-		/*try {
-			String select_querry = "SELECT * FROM ";
-			if (hierarchy != null) {
-				boolean first = true;
-				for (TableData td : hierarchy)
-					if (td.table != null) {
-						if (!first) {
-							sql += " , ";
-							delete_querry += " , ";
-						}
-						sql += td.table.name();
-						delete_querry += td.table.name();
-						first = false;
-					}
-			}
-			boolean crits = false;
-
-			if (criters.size() > 0) {
-				crits = true;
-				sql += " WHERE ";
-				sql += " " + criters.get(0).getCriteria() + "  ";
-				for (int i = 1; i < criters.size(); i++)
-					sql += " AND " + criters.get(i).getCriteria() + "  ";
-			}
-
-			if (hierarchy != null) {
-				if (hierarchy.size() > 1) {
-					if (crits)
-						sql += " AND ";
-					else
-						sql += " WHERE ";
-					TableData tdmain = hierarchy.get(0), tdmain1 = hierarchy.get(1);
-					if (tdmain != null)
-						sql += tdmain.table.name() + "." + tdmain1.pk.name() + "=" + tdmain1.table.name() + "."
-								+ tdmain1.pk.name();
-					for (int i = 2; i < hierarchy.size(); i++) {
-						TableData prev, curr;
-						prev = hierarchy.get(i - 1);
-						curr = hierarchy.get(i);
-						if (prev != null && curr != null)
-							sql += " AND " + prev.table.name() + "." + curr.pk.name() + "=" + curr.table.name() + "."
-									+ curr.pk.name();
-					}
-				}
-			}
-			sql += order == null ? "" : order;
-			Constructor<?> cons = current_table.class_name.getConstructor();
+		sql += c.getCriteriaText();
+		ResultSet rs = stmt.executeQuery(sql);
+		ResultSetMetaData rsmd = rs.getMetaData();
+		int no_col = rsmd.getColumnCount();
+		try {
+			Constructor<?> cons = current.class_name.getConstructor();
 			Object ret;
-			if (show_querries)
-				System.out.println(select_querry + sql);
-			List<Object> retlo = new ArrayList<Object>();
-			if (!remove) {
-				ResultSet rs = stmt.executeQuery(select_querry + sql);
-				ResultSetMetaData rsmd = rs.getMetaData();
-				int no_col = rsmd.getColumnCount();
-				while (rs.next()) {
-					ret = cons.newInstance();
-					for (int i = 1; i <= no_col; i++) {
-						String col_name = rsmd.getColumnName(i);
-						if (current_table.pk != null && current_table.pk.autoincrement()
-								&& current_table.pk.name().contentEquals(col_name)) {
+
+			while (rs.next()) {
+				ret = cons.newInstance();
+				for (int i = 1; i <= no_col; i++) {
+					String col_name = rsmd.getColumnName(i);
+					if (current.pk != null && current.pk.autoincrement() && current.pk.name().contentEquals(col_name)) {
+						Object obj = rs.getObject(i);
+						current.pk_field.set(ret, obj);
+						continue;
+					}
+					for (ColumnData cd : current.lcd) {
+						if (cd.col != null && col_name.equals(cd.col.name())) {
 							Object obj = rs.getObject(i);
-							current_table.pk_field.set(ret, obj);
-							continue;
+							cd.f.set(ret, obj);
+							break;
 						}
-						for (ColumnData cd : current_table.lcd) {
-							if (cd.col != null && col_name.equals(cd.col.name())) {
-								Object obj = rs.getObject(i);
-								cd.f.set(ret, obj);
-								break;
-							}
-							if (current_table.pk != null && col_name.equals(current_table.pk.name())) {
-								Object obj = rs.getObject(i);
-								current_table.pk_field.set(ret, obj);
-								break;
-							}
-						}
-						for (TableData td : hierarchy) {
-							if (td.pk != null && td.pk.autoincrement() && td.pk.name().contentEquals(col_name)) {
-								Object obj = rs.getObject(i);
-								td.pk_field.set(ret, obj);
-								break;
-							}
-							for (ColumnData cd : td.lcd) {
-								if (cd.col != null && col_name.equals(cd.col.name())) {
-									Object obj = rs.getObject(i);
-									cd.f.set(ret, obj);
-									break;
-								}
-							}
+						if (current.pk != null && col_name.equals(current.pk.name())) {
+							Object obj = rs.getObject(i);
+							current.pk_field.set(ret, obj);
+							break;
 						}
 					}
-					retlo.add(ret);
 				}
+				lo.add(ret);
 			}
-			if (remove) {
-				if (show_querries)
-					System.out.println(delete_querry + sql);
-				stmt.executeUpdate(delete_querry + sql);
-			}
-			con.close();
-			return retlo;
 		} catch (Exception e) {
-			return null;
-		}*/
+			e.printStackTrace();
+		}
 		return lo;
 	}
 
@@ -174,7 +100,7 @@ public class MariaDBConnector extends DBConnector {
 		try {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
-			String sql = "CREATE TABLE " + current.table.name();
+			String sql = "CREATE TABLE IF NOT EXISTS " + current.table.name();
 			sql += "(";
 			for (ColumnData cd : current.lcd) {
 				String coltype = DBConnector.getDataBaseType(cd.f.getGenericType());
@@ -219,5 +145,40 @@ public class MariaDBConnector extends DBConnector {
 	@Override
 	public Criteria createCriteria(TableData current) {
 		return new MariaDBCriteria(current);
+	}
+
+	@Override
+	public boolean create(TableData current, Object o) {
+		try {
+			Connection con = this.getConnection();
+			Statement stmt = con.createStatement();
+			String sql = "INSERT INTO " + current.table.name();
+			String decl = "", val = "";
+			decl += " (";
+			val += " (";
+
+			if (current.lcd.get(0).f.get(o) instanceof String)
+				val += "'" + current.lcd.get(0).f.get(o) + "'";
+			else
+				val += current.lcd.get(0).f.get(o);
+			decl += current.lcd.get(0).col.name();
+			for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
+				if (current.lcd.get(colInd).f.get(o) instanceof String)
+					val += ",'" + current.lcd.get(colInd).f.get(o) + "'";
+				else
+					val += "," + current.lcd.get(colInd).f.get(o);
+				decl += "," + current.lcd.get(colInd).col.name();
+			}
+			decl += ")";
+			val += ")";
+			sql += decl + " VALUES " + val;
+			if (this.show_querries)
+				System.out.println(sql);
+			stmt.executeUpdate(sql);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }

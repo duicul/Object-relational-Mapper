@@ -12,6 +12,8 @@ public class Car {
 	public String color;
 	@Column(name="RegistrationNumber")
 	public String reg_no;
+	@Column(name="Age")
+	public int age;
 	@PK(name="cid")
 	public int cid;
 	
@@ -19,10 +21,11 @@ public class Car {
 		
 	}
 	
-	public Car(String model,String color,String reg_no) {
+	public Car(String model,String color,String reg_no, int age) {
 		this.color=color;
 		this.model=model;
 		this.reg_no=reg_no;
+		this.age=age;
 	}
 	
 }

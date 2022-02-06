@@ -34,12 +34,6 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
-	public boolean create() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public boolean update() {
 		// TODO Auto-generated method stub
 		return false;
@@ -68,6 +62,12 @@ public class SQLiteDBConenctor extends DBConnector {
 	public List<Object> read(TableData current, Criteria c) throws ClassNotFoundException, SQLException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean create(TableData current, Object o) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

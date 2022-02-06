@@ -55,7 +55,8 @@ public class ClassMapper {
 					continue;
 				}
 			}
-			lcd.add(new ColumnData(c, otm, oto, f));
+			if(pk==null)
+				lcd.add(new ColumnData(c, otm, oto, f));
 		}
 		return new TableData(lcd, t, pk, pk_field, tableClass, foreign_keys);
 
