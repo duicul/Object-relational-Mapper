@@ -40,12 +40,6 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
-	public boolean delete() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public Connection getConnection() throws SQLException, ClassNotFoundException {
 		Class.forName(this.driver);
 		Connection con = DriverManager.getConnection("jdbc:sqlite:" + database, username, password);
@@ -59,13 +53,19 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
-	public List<Object> read(TableData current, Criteria c) throws ClassNotFoundException, SQLException {
+	public List<Object> read(Criteria c) throws ClassNotFoundException, SQLException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean create(TableData current, Object o) {
+	public boolean create( Object o) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean delete(Criteria c) {
 		// TODO Auto-generated method stub
 		return false;
 	}

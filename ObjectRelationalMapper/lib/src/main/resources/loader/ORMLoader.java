@@ -14,12 +14,12 @@ public class ORMLoader {
 	}
 
 	public boolean createTable(Class<?> tableClass) {
-		TableData td = ClassMapper.extractTableData(tableClass);
+		TableData td = ClassMapper.getInstance().getTableData(tableClass);
 		return dbc.createTable(td);
 	}
 
 	public String getJSON(Object o) {
-		TableData td = ClassMapper.extractTableData(o.getClass());
+		TableData td = ClassMapper.getInstance().getTableData(o.getClass());
 		String json = "{";
 		try {
 			json += "'" + td.lcd.get(0).col.name() + "':";
@@ -61,12 +61,12 @@ public class ORMLoader {
 	}
 
 	public Criteria createCriteria(Class<?> tableClass) {
-		return this.dbc.createCriteria(ClassMapper.extractTableData(tableClass));
+		return this.dbc.createCriteria(ClassMapper.getInstance().getTableData(tableClass));
 	}
 
 	public List<Object> get(Criteria c) {
 		try {
-			return this.dbc.read(c.td, c);
+			return this.dbc.read(c);
 		} catch (ClassNotFoundException | SQLException e) {
 			return null;
 		}
@@ -74,7 +74,10 @@ public class ORMLoader {
 	}
 
 	public boolean insert(Object o) {
-		TableData td = ClassMapper.extractTableData(o.getClass());
-		return this.dbc.create(td, o);
+		return this.dbc.create(o);
+	}
+	
+	public boolean delete(Criteria c) {
+		return this.dbc.delete(c);
 	}
 }

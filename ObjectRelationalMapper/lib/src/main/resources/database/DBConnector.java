@@ -11,10 +11,10 @@ import loader.TableData;
 public abstract class DBConnector {
 	public abstract boolean createTable(TableData td);
 	public abstract boolean deleteTable(String tableName);
-	public abstract boolean create(TableData current,Object o);
-	public abstract List<Object> read(TableData current, Criteria c) throws ClassNotFoundException, SQLException;
+	public abstract boolean create(Object o);
+	public abstract List<Object> read(Criteria c) throws ClassNotFoundException, SQLException;
 	public abstract boolean update();
-	public abstract boolean delete();
+	public abstract boolean delete(Criteria c);
 	
 	public abstract Connection getConnection() throws SQLException, ClassNotFoundException;
 	

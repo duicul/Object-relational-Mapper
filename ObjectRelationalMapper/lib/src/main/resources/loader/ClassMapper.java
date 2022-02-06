@@ -5,7 +5,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import annotation.Column;
 import annotation.OneToMany;
@@ -14,12 +16,28 @@ import annotation.PK;
 import annotation.Table;
 
 public class ClassMapper {
-
-	public ClassMapper() {
-		// TODO Auto-generated constructor stub
+	private Map<Class<?>, TableData> cacheTableData;
+	private static ClassMapper classMapper = null;
+	private ClassMapper() {
+		this.cacheTableData = new HashMap<Class<?>, TableData>();
 	}
-
-	public static TableData extractTableData(Class<?> tableClass) {
+	
+	public static ClassMapper getInstance() {
+		if(classMapper == null)
+			classMapper = new ClassMapper();
+		return classMapper;
+	}
+	
+	public TableData getTableData(Class<?> tableClass) {
+		TableData td = this.cacheTableData.get(tableClass);
+		if(td==null) {
+			td = this.extractTableData(tableClass);
+			this.cacheTableData.put(tableClass, td);
+		}
+		return td;
+	}
+	
+	private TableData extractTableData(Class<?> tableClass) {
 		Table t = getTableAnnotation(tableClass);
 		List<ColumnData> lcd = new ArrayList<ColumnData>();
 		PK pk = null;
@@ -40,13 +58,13 @@ public class ClassMapper {
 					if (list_oneto instanceof ParameterizedType) {
 						ParameterizedType paramtype = (ParameterizedType) list_oneto;
 						if (((ParameterizedType) list_oneto).getActualTypeArguments().length > 0)
-							foreign_keys.add(ClassMapper.extractTableData((Class<?>) paramtype.getActualTypeArguments()[0]));
+							foreign_keys.add(this.extractTableData((Class<?>) paramtype.getActualTypeArguments()[0]));
 					}
 					continue;
 				}
 				if (a instanceof OneToOne) {
 					oto = (OneToOne) a;
-					foreign_keys.add(ClassMapper.extractTableData((Class<?>) f.getGenericType()));
+					foreign_keys.add(this.extractTableData((Class<?>) f.getGenericType()));
 					continue;
 				}
 				if (a instanceof PK) {

@@ -12,6 +12,7 @@ import java.util.List;
 
 import criteria.Criteria;
 import criteria.MariaDBCriteria;
+import loader.ClassMapper;
 import loader.ColumnData;
 import loader.TableData;
 
@@ -39,7 +40,8 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public List<Object> read(TableData current, Criteria c) throws ClassNotFoundException, SQLException {
+	public List<Object> read(Criteria c) throws ClassNotFoundException, SQLException {
+		TableData current = c.td;
 		List<Object> lo = new LinkedList<Object>();
 		Connection con = this.getConnection();
 		Statement stmt = con.createStatement();
@@ -90,9 +92,24 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public boolean delete() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean delete(Criteria c) {
+		try {
+			TableData current = c.td;
+			Connection con = this.getConnection();
+			Statement stmt = con.createStatement();
+			String sql = "DELETE FROM " + current.table.name();
+			sql += " WHERE ";
+			sql += c.getCriteriaText();
+			if (this.show_querries)
+				System.out.println(sql);
+
+			stmt.executeUpdate(sql);
+			ResultSet rs = stmt.executeQuery(sql);
+		} catch (SQLException | ClassNotFoundException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -148,8 +165,9 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public boolean create(TableData current, Object o) {
+	public boolean create(Object o) {
 		try {
+			TableData current = ClassMapper.getInstance().getTableData(o.getClass());
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
 			String sql = "INSERT INTO " + current.table.name();
