@@ -5,6 +5,7 @@ import java.util.List;
 
 import criteria.Criteria;
 import database.DBConnector;
+import exception.WrongColumnName;
 
 public class ORMLoader {
 	private DBConnector dbc;
@@ -16,6 +17,11 @@ public class ORMLoader {
 	public boolean createTable(Class<?> tableClass) {
 		TableData td = ClassMapper.getInstance().getTableData(tableClass);
 		return dbc.createTable(td);
+	}
+	
+	public boolean dropTable(Class<?> tableClass) {
+		TableData td = ClassMapper.getInstance().getTableData(tableClass);
+		return dbc.deleteTable(td);
 	}
 
 	public String getJSON(Object o) {
@@ -70,7 +76,6 @@ public class ORMLoader {
 		} catch (ClassNotFoundException | SQLException e) {
 			return null;
 		}
-
 	}
 
 	public boolean insert(Object o) {
@@ -79,5 +84,20 @@ public class ORMLoader {
 	
 	public boolean delete(Criteria c) {
 		return this.dbc.delete(c);
+	}
+	
+	public boolean update(Criteria c, Object o) {
+		return this.dbc.update(c, o);
+	}
+	
+	public boolean update(Object o) {
+		Criteria c =this.createCriteria(o.getClass());
+		try {
+			c.eq(c.td.pk.name(), c.td.pk_field.get(o));
+		} catch (IllegalArgumentException | IllegalAccessException | WrongColumnName e) {
+			e.printStackTrace();
+			return false;
+		}
+		return this.update(c, o);		
 	}
 }

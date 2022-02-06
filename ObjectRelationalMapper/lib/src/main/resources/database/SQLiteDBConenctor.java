@@ -27,17 +27,6 @@ public class SQLiteDBConenctor extends DBConnector {
 		return false;
 	}
 
-	@Override
-	public boolean deleteTable(String tableName) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean update() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	@Override
 	public Connection getConnection() throws SQLException, ClassNotFoundException {
@@ -66,6 +55,18 @@ public class SQLiteDBConenctor extends DBConnector {
 
 	@Override
 	public boolean delete(Criteria c) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean update(Criteria c, Object o) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean deleteTable(TableData td) {
 		// TODO Auto-generated method stub
 		return false;
 	}

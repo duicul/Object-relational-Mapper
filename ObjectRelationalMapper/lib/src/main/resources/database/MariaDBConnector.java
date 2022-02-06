@@ -34,9 +34,21 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public boolean deleteTable(String tableName) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean deleteTable(TableData current) {
+		try {
+			Connection con = this.getConnection();
+			Statement stmt = con.createStatement();
+			String sql = "DROP TABLE " + current.table.name();
+			if (this.show_querries)
+				System.out.println(sql);
+
+			stmt.executeUpdate(sql);
+			ResultSet rs = stmt.executeQuery(sql);
+		} catch (SQLException | ClassNotFoundException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -83,12 +95,6 @@ public class MariaDBConnector extends DBConnector {
 			e.printStackTrace();
 		}
 		return lo;
-	}
-
-	@Override
-	public boolean update() {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 	@Override
@@ -196,7 +202,41 @@ public class MariaDBConnector extends DBConnector {
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}
-		return false;
+	}
+
+	@Override
+	public boolean update(Criteria c, Object o) {
+		try {
+			TableData current = ClassMapper.getInstance().getTableData(o.getClass());
+			Connection con = this.getConnection();
+			Statement stmt = con.createStatement();
+			String sql = "UPDATE " + current.table.name();
+			sql+=" SET ";
+			
+			sql+=current.lcd.get(0).col.name()+"=";
+			if (current.lcd.get(0).f.get(o) instanceof String)
+				sql += "'" + current.lcd.get(0).f.get(o) + "'";
+			else
+				sql += current.lcd.get(0).f.get(o);
+
+			for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
+				sql+=","+current.lcd.get(colInd).col.name()+"=";
+				if (current.lcd.get(colInd).f.get(o) instanceof String)
+					sql += "'" + current.lcd.get(colInd).f.get(o) + "'";
+				else
+					sql += current.lcd.get(colInd).f.get(o);
+			}
+			sql+=" WHERE ";
+			sql+=c.getCriteriaText();
+			if (this.show_querries)
+				System.out.println(sql);
+			stmt.executeUpdate(sql);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 }

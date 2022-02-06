@@ -3,6 +3,7 @@ package criteria;
 import java.util.LinkedList;
 import java.util.List;
 
+import exception.WrongColumnName;
 import loader.TableData;
 
 public abstract class Criteria {
@@ -24,17 +25,17 @@ public abstract class Criteria {
 			critText += criteriaData.get(i);
 			critText += " AND ";
 		}
-
-		critText += criteriaData.get(criteriaData.size() - 1);
+		if (criteriaData.size() > 0)
+			critText += criteriaData.get(criteriaData.size() - 1);
 
 		return critText;
 	}
 
-	public abstract void gt(String column, Object val);
+	public abstract void gt(String column, Object val) throws WrongColumnName;
 
-	public abstract void lt(String column, Object val);
+	public abstract void lt(String column, Object val) throws WrongColumnName;
 
-	public abstract void eq(String column, Object val);
+	public abstract void eq(String column, Object val) throws WrongColumnName;
 
-	public abstract void like(String column, Object val);
+	public abstract void like(String column, Object val) throws WrongColumnName;
 }

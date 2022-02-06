@@ -1,4 +1,4 @@
-package criteria;
+package exception;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(Lifecycle.PER_CLASS)
-public class CriteriaTestMariaDb {
+public class ExceptionTestMariaDb {
 	private DBConnector dbc;
 	private ORMLoader ol;
 	private Criteria c;
@@ -28,41 +28,44 @@ public class CriteriaTestMariaDb {
 	}
 
 	@Test
-	public void testLT() {
+	public void testLTWrongColumn() {
 		this.c = this.ol.createCriteria(Nota.class);
 		try {
-			this.c.lt("Value", 9);
+			this.c.lt("Valuenone", 9);
+			fail();
 		} catch (WrongColumnName e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
-		assertEquals(this.c.getCriteriaText(), "Nota.Value < 9");
+		assertEquals(this.c.getCriteriaText(), "");
 	}
 
 	@Test
-	public void testLike() {
+	public void testLikeWrongColumn() {
+		this.c = this.ol.createCriteria(Nota.class);
+		try {
+			this.c.like("Valuenone", "ana%");
+			fail();
+		} catch (WrongColumnName e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+		}
+		assertEquals(this.c.getCriteriaText(), "");
+	}
+
+	@Test
+	public void testMultipleWrongColumn() {
 		this.c = this.ol.createCriteria(Nota.class);
 		try {
 			this.c.like("Value", "ana%");
+
+			this.c.gt("Valuenone", 3);
+			fail();
 		} catch (WrongColumnName e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		assertEquals(this.c.getCriteriaText(), "Nota.Value LIKE 'ana%'");
-	}
-
-	@Test
-	public void testMultiple() {
-		this.c = this.ol.createCriteria(Nota.class);
-		try {
-			this.c.like("Value", "ana%");
-
-			this.c.gt("Value", 3);
-		} catch (WrongColumnName e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		assertEquals(this.c.getCriteriaText(), "Nota.Value LIKE 'ana%' AND Nota.Value > 3");
 	}
 
 }
