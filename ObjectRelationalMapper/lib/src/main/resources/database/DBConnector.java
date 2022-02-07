@@ -79,21 +79,25 @@ public abstract class DBConnector {
 				ret = cons.newInstance();
 				for (int i = 1; i <= no_col; i++) {
 					String col_name = rsmd.getColumnName(i);
-					if (current.pk != null && current.pk.autoincrement() && current.pk.name().contentEquals(col_name)) {
-						Object obj = rs.getObject(i);
-						current.pk_field.set(ret, obj);
-						continue;
-					}
-					for (ColumnData cd : current.lcd) {
-						if (cd.col != null && col_name.equals(cd.col.name())) {
+					for (TableData curTable = current; curTable != null; curTable = curTable.parentTable) {
+
+						if (curTable.pk != null && curTable.pk.autoincrement()
+								&& curTable.pk.name().contentEquals(col_name)) {
 							Object obj = rs.getObject(i);
-							cd.f.set(ret, obj);
-							break;
+							curTable.pk_field.set(ret, obj);
+							continue;
 						}
-						if (current.pk != null && col_name.equals(current.pk.name())) {
-							Object obj = rs.getObject(i);
-							current.pk_field.set(ret, obj);
-							break;
+						for (ColumnData cd : curTable.lcd) {
+							if (cd.col != null && col_name.equals(cd.col.name())) {
+								Object obj = rs.getObject(i);
+								cd.f.set(ret, obj);
+								break;
+							}
+							if (curTable.pk != null && col_name.equals(curTable.pk.name())) {
+								Object obj = rs.getObject(i);
+								curTable.pk_field.set(ret, obj);
+								break;
+							}
 						}
 					}
 				}

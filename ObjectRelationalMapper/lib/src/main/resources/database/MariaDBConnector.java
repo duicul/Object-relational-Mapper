@@ -33,10 +33,6 @@ public class MariaDBConnector extends DBConnector {
 		this.driver = "org.mariadb.jdbc.Driver";
 	}
 
-	
-
-
-
 	@Override
 	public Connection getConnection() throws SQLException, ClassNotFoundException {
 		Class.forName(this.driver);
@@ -67,32 +63,33 @@ public class MariaDBConnector extends DBConnector {
 			 */
 		}
 		if (td.pk != null) {
-			sql += td.pk.name() + " " + td.pk.type() + " "
-					+ (td.pk.autoincrement() ? "AUTO_INCREMENT" : "") + " , ";
+			sql += td.pk.name() + " " + td.pk.type() + " " + (td.pk.autoincrement() ? "AUTO_INCREMENT" : "") + " , ";
 			sql += " PRIMARY KEY ( " + td.pk.name() + " ) ";
 		}
 		for (TableData foreignTab : td.foreign_val_key) {
 			sql += " , " + foreignTab.pk.name() + " " + foreignTab.pk.type();
 		}
-		if(td.parentTable!=null && td.parentTable.pk_field!=null) {
+		if (td.parentTable != null && td.parentTable.pk_field != null) {
 			String parentPkType = DBConnector.getDataBaseType(td.parentTable.pk_field.getGenericType());
 			if (parentPkType != null)
 				if (td.parentTable.pk != null) {
-					sql+= " , "+td.parentTableFK + " " + parentPkType+" , " ;
-					sql+= " CONSTRAINT "+td.table.name()+td.parentTable.table.name();
-					sql+= " FOREIGN KEY ("+td.parentTableFK+") REFERENCES "+td.parentTable.table.name()+" ("+td.parentTable.pk.name()+")";
-					sql+= " ON DELETE CASCADE ON UPDATE RESTRICT";
+					sql += " , " + td.parentTableFK + " " + parentPkType + " , ";
+					sql += " CONSTRAINT " + td.table.name() + td.parentTable.table.name();
+					sql += " FOREIGN KEY (" + td.parentTableFK + ") REFERENCES " + td.parentTable.table.name() + " ("
+							+ td.parentTable.pk.name() + ")";
+					sql += " ON DELETE CASCADE ON UPDATE RESTRICT";
 				}
 		}
 		sql += ");";
 		if (this.show_querries)
 			System.out.println(sql);
-		
+
 		batch.add(sql);
-;		if(td.parentTable!=null) {
-				batch.addAll(this.generateCreateTableQuery(td.parentTable));
+		;
+		if (td.parentTable != null) {
+			batch.addAll(this.generateCreateTableQuery(td.parentTable));
 		}
-		
+
 		return batch;
 	}
 
@@ -105,19 +102,22 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateCreateQuery(Object o,Class<?> subClass) throws IllegalArgumentException, IllegalAccessException {
+	public List<String> generateCreateQuery(Object o, Class<?> subClass)
+			throws IllegalArgumentException, IllegalAccessException {
 		List<String> query = new LinkedList<String>();
 		TableData current = ClassMapper.getInstance().getTableData(subClass);
 		String sql = "INSERT INTO " + current.table.name();
 		String decl = "", val = "";
 		decl += " (";
 		val += " (";
-
-		if (current.lcd.get(0).f.get(o) instanceof String)
-			val += "'" + current.lcd.get(0).f.get(o) + "'";
-		else
-			val += current.lcd.get(0).f.get(o);
-		decl += current.lcd.get(0).col.name();
+		if (current.lcd.size() > 0) {
+			if (current.lcd.get(0).f.get(o) instanceof String)
+				val += "'" + current.lcd.get(0).f.get(o) + "'";
+			else
+				val += current.lcd.get(0).f.get(o);
+			decl += current.lcd.get(0).col.name();
+		}
+		
 		for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
 			if (current.lcd.get(colInd).f.get(o) instanceof String)
 				val += ",'" + current.lcd.get(colInd).f.get(o) + "'";
@@ -125,19 +125,24 @@ public class MariaDBConnector extends DBConnector {
 				val += "," + current.lcd.get(colInd).f.get(o);
 			decl += "," + current.lcd.get(colInd).col.name();
 		}
-		if(current.parentTable!=null) {
-			val += "," + "LAST_INSERT_ID()";
-			decl += "," + current.parentTableFK;
-		}
 		
+		if (current.parentTable != null) {
+			if (current.lcd.size() > 0) {
+				val += " , ";
+				decl += " , ";
+			}
+			val += "LAST_INSERT_ID()";
+			decl += current.parentTableFK;
+		}
+
 		decl += ")";
 		val += ")";
 		sql += decl + " VALUES " + val;
 		query.add(sql);
 		if (this.show_querries)
 			System.out.println(sql);
-		if(current.parentTable!=null) {
-			query.addAll(this.generateCreateQuery(o,current.parentTable.class_name));
+		if (current.parentTable != null) {
+			query.addAll(this.generateCreateQuery(o, current.parentTable.class_name));
 		}
 		return query;
 	}
@@ -146,9 +151,16 @@ public class MariaDBConnector extends DBConnector {
 	public String generateReadQuery(Criteria c) throws ClassNotFoundException, SQLException {
 		TableData current = c.td;
 		String sql = "SELECT * FROM " + current.table.name();
+		String tablejoin = " ";
+		for (TableData parent = current.parentTable,
+				child = current; parent != null; child = parent, parent = parent.parentTable) {
+			tablejoin += " INNER JOIN " + parent.table.name() + " ON " + child.table.name() + "." + child.parentTableFK
+					+ " = " + parent.table.name() + "." + parent.pk.name();
+		}
+		sql += tablejoin;
 		sql += " WHERE ";
 		sql += c.getCriteriaText();
-		if(this.show_querries)
+		if (this.show_querries)
 			System.out.println(sql);
 		return sql;
 	}
@@ -157,23 +169,23 @@ public class MariaDBConnector extends DBConnector {
 	public String generateUpdateQuery(Criteria c, Object o) throws IllegalArgumentException, IllegalAccessException {
 		TableData current = ClassMapper.getInstance().getTableData(o.getClass());
 		String sql = "UPDATE " + current.table.name();
-		sql+=" SET ";
-		
-		sql+=current.lcd.get(0).col.name()+"=";
+		sql += " SET ";
+
+		sql += current.lcd.get(0).col.name() + "=";
 		if (current.lcd.get(0).f.get(o) instanceof String)
 			sql += "'" + current.lcd.get(0).f.get(o) + "'";
 		else
 			sql += current.lcd.get(0).f.get(o);
 
 		for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
-			sql+=","+current.lcd.get(colInd).col.name()+"=";
+			sql += "," + current.lcd.get(colInd).col.name() + "=";
 			if (current.lcd.get(colInd).f.get(o) instanceof String)
 				sql += "'" + current.lcd.get(colInd).f.get(o) + "'";
 			else
 				sql += current.lcd.get(colInd).f.get(o);
 		}
-		sql+=" WHERE ";
-		sql+=c.getCriteriaText();
+		sql += " WHERE ";
+		sql += c.getCriteriaText();
 		if (this.show_querries)
 			System.out.println(sql);
 		return sql;

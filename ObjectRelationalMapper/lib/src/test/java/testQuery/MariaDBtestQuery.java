@@ -38,7 +38,38 @@ public class MariaDBtestQuery {
 			this.c.lt("Value", 9);
 			String query = this.dbc.generateReadQuery(c);
 
-			assertEquals(query, "SELECT * FROM Nota WHERE Nota.Value < 9");
+			assertEquals(query, "SELECT * FROM Nota  WHERE Nota.Value < 9");
+		}catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	@Test
+	public void testReadQuery2Hierarchy() {
+		this.c = this.ol.createCriteria(SUV.class);
+		try {
+			this.c.lt("HorsePower", 300);
+			String query = this.dbc.generateReadQuery(c);
+
+			assertEquals(query, "SELECT * FROM SUV  INNER JOIN Car ON SUV.Carcid = Car.cid WHERE SUV.HorsePower < 300");
+		}catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	@Test
+	public void testReadQuery3Hierarchy() {
+		this.c = this.ol.createCriteria(WhiteSUV.class);
+		try {
+			this.c.lt("HorsePower", 300);
+			String query = this.dbc.generateReadQuery(c);
+
+			assertEquals(query, "SELECT * FROM WhiteSUV  INNER JOIN SUV ON WhiteSUV.SUVsid = SUV.sid INNER JOIN Car ON SUV.Carcid = Car.cid WHERE WhiteSUV.HorsePower < 300"
+					+ "");
 		}catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -64,7 +95,7 @@ public class MariaDBtestQuery {
 		try {
 			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW","alb" , "MH69KOL", 4, 120),SUV.class);
 			
-			assertEquals(query.get(0),"INSERT INTO SUV (HorsePower,Carcid) VALUES  (120,LAST_INSERT_ID())");
+			assertEquals(query.get(0),"INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
 			assertEquals(query.get(1),"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -78,8 +109,8 @@ public class MariaDBtestQuery {
 		try {
 			List<String> query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120),WhiteSUV.class);
 			
-			assertEquals(query.get(0),"INSERT INTO WhiteSUV (HorsePower,SUVsid) VALUES  (0,LAST_INSERT_ID())");
-			assertEquals(query.get(1),"INSERT INTO SUV (HorsePower,Carcid) VALUES  (120,LAST_INSERT_ID())");
+			assertEquals(query.get(0),"INSERT INTO WhiteSUV (SUVsid) VALUES  (LAST_INSERT_ID())");
+			assertEquals(query.get(1),"INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
 			assertEquals(query.get(2),"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','white','MH69KOL',4)");
 			
 		} catch (Exception e) {
@@ -159,7 +190,7 @@ public class MariaDBtestQuery {
 	public void testCreateTableQuery3Hierarchy() {
 		try {
 			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
-			assertEquals(query.get(0),"CREATE TABLE IF NOT EXISTS WhiteSUV(HorsePower INTEGER , wsid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( wsid )  , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+			assertEquals(query.get(0),"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( wsid )  , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(2),"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
 		} catch (Exception e) {

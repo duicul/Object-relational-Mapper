@@ -6,8 +6,6 @@ import annotation.Table;
 
 @Table(name = "WhiteSUV")
 public class WhiteSUV extends SUV {
-	@Column(name="HorsePower")
-    public int hp;
 	
 	@PK(name="wsid")
 	public int wsid;

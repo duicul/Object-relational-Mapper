@@ -1,7 +1,12 @@
 package loader;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import criteria.Criteria;
 import database.DBConnector;
@@ -18,7 +23,7 @@ public class ORMLoader {
 		TableData td = ClassMapper.getInstance().getTableData(tableClass);
 		return dbc.createTable(td);
 	}
-	
+
 	public boolean dropTable(Class<?> tableClass) {
 		TableData td = ClassMapper.getInstance().getTableData(tableClass);
 		return dbc.deleteTable(td);
@@ -26,44 +31,36 @@ public class ORMLoader {
 
 	public String getJSON(Object o) {
 		TableData td = ClassMapper.getInstance().getTableData(o.getClass());
-		String json = "{";
-		try {
-			json += "'" + td.lcd.get(0).col.name() + "':";
-			Object colVal = td.lcd.get(0).f.get(o);
-			if (colVal instanceof String)
-				json += "'" + colVal + "'";
-			else
-				json += colVal;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		for (int i = 1; i < td.lcd.size(); i++) {
+		Map<String, String> elements = new HashMap<String, String>();
+		for (TableData current = td; current != null; current = current.parentTable) {
+			for (int i = 0; i < current.lcd.size(); i++) {
 
+				try {
+					Object colVal = current.lcd.get(i).f.get(o);
+					elements.put(current.lcd.get(i).col.name(), colVal.toString());
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					e.printStackTrace();
+					continue;
+				}
+
+			}
 			try {
-				json += ",'" + td.lcd.get(i).col.name() + "':";
-				Object colVal = td.lcd.get(i).f.get(o);
-				if (colVal instanceof String)
-					json += "'" + colVal + "'";
-				else
-					json += colVal;
+				Object pkVal = current.pk_field.get(o);
+				elements.put(current.pk.name(), pkVal.toString());
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
-				continue;
 			}
+		}
+		ObjectMapper objectMapper = new ObjectMapper();
 
-		}
-		try {
-			json += ",'" + td.pk.name() + "':";
-			Object pkVal = td.pk_field.get(o);
-			if (pkVal instanceof String)
-				json += "'" + pkVal + "'";
-			else
-				json += pkVal;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		json += "}";
-		return json;
+        try {
+            String json = objectMapper.writeValueAsString(elements);
+            return json;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+		return "{}";
+		
 	}
 
 	public Criteria createCriteria(Class<?> tableClass) {
@@ -81,13 +78,13 @@ public class ORMLoader {
 	public boolean insert(Object o) {
 		return this.dbc.create(o);
 	}
-	
+
 	public boolean delete(Criteria c) {
 		return this.dbc.delete(c);
 	}
-	
+
 	public boolean delete(Object o) {
-		Criteria c =this.createCriteria(o.getClass());
+		Criteria c = this.createCriteria(o.getClass());
 		try {
 			c.eq(c.td.pk.name(), c.td.pk_field.get(o));
 		} catch (IllegalArgumentException | IllegalAccessException | WrongColumnName e) {
@@ -96,19 +93,19 @@ public class ORMLoader {
 		}
 		return this.delete(c);
 	}
-	
+
 	public boolean update(Criteria c, Object o) {
 		return this.dbc.update(c, o);
 	}
-	
+
 	public boolean update(Object o) {
-		Criteria c =this.createCriteria(o.getClass());
+		Criteria c = this.createCriteria(o.getClass());
 		try {
 			c.eq(c.td.pk.name(), c.td.pk_field.get(o));
 		} catch (IllegalArgumentException | IllegalAccessException | WrongColumnName e) {
 			e.printStackTrace();
 			return false;
 		}
-		return this.update(c, o);		
+		return this.update(c, o);
 	}
 }

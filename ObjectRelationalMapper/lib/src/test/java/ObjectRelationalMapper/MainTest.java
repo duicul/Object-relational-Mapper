@@ -75,9 +75,21 @@ public class MainTest {
 			cr.color = "Yellow";
 			ol.update(liceC, cr);
 		}
-		
+
 		ol.createTable(WhiteSUV.class);
-		ol.insert(new WhiteSUV("BMW","MH69KOL", 4, 120));
+		ol.insert(new WhiteSUV("BMW", "MH69KOL", 4, 120));
+
+		Criteria wS = ol.createCriteria(WhiteSUV.class);
+		try {
+			wS.lt("HorsePower", 300);
+		} catch (WrongColumnName e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		for (Object whiteSuv : ol.get(wS)) {
+			WhiteSUV ws = (WhiteSUV) whiteSuv;
+			System.out.println(ol.getJSON(ws));
+		}
 	}
 
 }

@@ -10,53 +10,55 @@ public class MariaDBCriteria extends Criteria {
 		super(td);
 	}
 	
-	public boolean checkColumnExists(String column) throws WrongColumnName {
-		for(ColumnData cd :this.td.lcd) {
-			if(cd.col.name().equals(column)) 
-				return true;
+	public String checkColumnTable(String column) throws WrongColumnName {
+		for (TableData current = this.td; current != null; current = current.parentTable) {
+			for (ColumnData cd : current.lcd) {
+				if (cd.col.name().equals(column))
+					return current.table.name();
+			}
+			if (current.pk.name().equals(column))
+				return current.table.name();
 		}
-		if(td.pk.name().equals(column))
-			return true;
-		throw new WrongColumnName(td,column);
+		throw new WrongColumnName(td, column);
 	}
 	
 	@Override
 	public void gt(String column, Object val) throws WrongColumnName {
-		this.checkColumnExists(column);
+		String tableName = this.checkColumnTable(column);
 		if(val instanceof String) {
-			this.addCriteria(td.table.name() + "." + column + " > '" + val+"'");
+			this.addCriteria(tableName + "." + column + " > '" + val+"'");
 		}else {
-			this.addCriteria(td.table.name() + "." + column + " > " + val);
+			this.addCriteria(tableName + "." + column + " > " + val);
 		}
 	}
 
 	@Override
 	public void lt(String column, Object val) throws WrongColumnName {
-		this.checkColumnExists(column);
+		String tableName = this.checkColumnTable(column);
 		if(val instanceof String) {
-			this.addCriteria(td.table.name() + "." + column + " < '" + val+"'");
+			this.addCriteria(tableName + "." + column + " < '" + val+"'");
 		}else {
-			this.addCriteria(td.table.name() + "." + column + " < " + val);
+			this.addCriteria(tableName + "." + column + " < " + val);
 		}
 	}
 
 	@Override
 	public void eq(String column, Object val) throws WrongColumnName {
-		this.checkColumnExists(column);
+		String tableName = this.checkColumnTable(column);
 		if(val instanceof String) {
-			this.addCriteria(td.table.name() + "." + column + " = '" + val+"'");
+			this.addCriteria(tableName + "." + column + " = '" + val+"'");
 		}else {
-			this.addCriteria(td.table.name() + "." + column + " = " + val);
+			this.addCriteria(tableName + "." + column + " = " + val);
 		}
 	}
 
 	@Override
 	public void like(String column, Object val) throws WrongColumnName {
-		this.checkColumnExists(column);
+		String tableName = this.checkColumnTable(column);
 		if(val instanceof String) {
-			this.addCriteria(td.table.name() + "." + column + " LIKE '" + val+"'");
+			this.addCriteria(tableName + "." + column + " LIKE '" + val+"'");
 		}else {
-			this.addCriteria(td.table.name() + "." + column + " LIKE " + val);
+			this.addCriteria(tableName + "." + column + " LIKE " + val);
 		}
 
 	}

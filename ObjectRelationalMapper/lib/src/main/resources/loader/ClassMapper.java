@@ -35,8 +35,6 @@ public class ClassMapper {
 			td = this.extractTableData(tableClass);
 			this.cacheTableData.put(tableClass, td);
 		}
-		for (Object o : this.cacheTableData.entrySet())
-			System.out.println(o);
 		return td;
 	}
 
@@ -82,6 +80,7 @@ public class ClassMapper {
 		TableData parentTable = null;
 		if (tableClass.getSuperclass() != Object.class) {
 			parentTable = this.extractTableData(tableClass.getSuperclass());
+			this.cacheTableData.put(tableClass.getSuperclass(), parentTable);
 		}
 		return new TableData(lcd, t, pk, pk_field, tableClass, parentTable, foreign_keys);
 
