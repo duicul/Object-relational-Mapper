@@ -11,10 +11,13 @@ import database.MariaDBConnector;
 import exception.WrongColumnName;
 import loader.ORMLoader;
 import testClasses.Nota;
+import testClasses.SUV;
+import testClasses.WhiteSUV;
 import testClasses.Car;
 
 public class MainTest {
 	private static final Logger logger = LogManager.getLogger(MainTest.class);
+
 	public static void main(String[] args) {
 		logger.error("test");
 		DBConnector dbc = new MariaDBConnector(3306, "localhost", "root", "", "test_orm", true);
@@ -53,8 +56,8 @@ public class MainTest {
 		for (Object car : objCar) {
 			Car cr = (Car) car;
 			System.out.println(ol.getJSON(cr));
-			cr.age=34;
-			cr.color="Green";
+			cr.age = 34;
+			cr.color = "Green";
 			ol.update(cr);
 		}
 		Criteria liceC = ol.createCriteria(Car.class);
@@ -68,10 +71,13 @@ public class MainTest {
 		for (Object car : objCar) {
 			Car cr = (Car) car;
 			System.out.println(ol.getJSON(cr));
-			cr.age=34;
-			cr.color="Yellow";
+			cr.age = 34;
+			cr.color = "Yellow";
 			ol.update(liceC, cr);
 		}
+		
+		ol.createTable(WhiteSUV.class);
+		ol.insert(new WhiteSUV("BMW","MH69KOL", 4, 120));
 	}
 
 }

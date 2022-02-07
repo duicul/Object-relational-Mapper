@@ -86,6 +86,17 @@ public class ORMLoader {
 		return this.dbc.delete(c);
 	}
 	
+	public boolean delete(Object o) {
+		Criteria c =this.createCriteria(o.getClass());
+		try {
+			c.eq(c.td.pk.name(), c.td.pk_field.get(o));
+		} catch (IllegalArgumentException | IllegalAccessException | WrongColumnName e) {
+			e.printStackTrace();
+			return false;
+		}
+		return this.delete(c);
+	}
+	
 	public boolean update(Criteria c, Object o) {
 		return this.dbc.update(c, o);
 	}

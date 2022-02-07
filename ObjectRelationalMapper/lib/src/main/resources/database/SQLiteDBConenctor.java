@@ -36,39 +36,45 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
+	public List<String> generateCreateTableQuery(TableData td) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String generateDeleteTableQuery(TableData td) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> generateCreateQuery(Object o,Class<?> subClas) throws IllegalArgumentException, IllegalAccessException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String generateReadQuery(Criteria c) throws ClassNotFoundException, SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String generateUpdateQuery(Criteria c, Object o) throws IllegalArgumentException, IllegalAccessException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String generateDeleteQuery(Criteria c) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public Criteria createCriteria(TableData current) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public List<Object> read(Criteria c) throws ClassNotFoundException, SQLException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean create( Object o) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean delete(Criteria c) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean update(Criteria c, Object o) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean deleteTable(TableData td) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 }

@@ -18,25 +18,28 @@ import annotation.Table;
 public class ClassMapper {
 	private Map<Class<?>, TableData> cacheTableData;
 	private static ClassMapper classMapper = null;
+
 	private ClassMapper() {
 		this.cacheTableData = new HashMap<Class<?>, TableData>();
 	}
-	
+
 	public static ClassMapper getInstance() {
-		if(classMapper == null)
+		if (classMapper == null)
 			classMapper = new ClassMapper();
 		return classMapper;
 	}
-	
+
 	public TableData getTableData(Class<?> tableClass) {
 		TableData td = this.cacheTableData.get(tableClass);
-		if(td==null) {
+		if (td == null) {
 			td = this.extractTableData(tableClass);
 			this.cacheTableData.put(tableClass, td);
 		}
+		for (Object o : this.cacheTableData.entrySet())
+			System.out.println(o);
 		return td;
 	}
-	
+
 	private TableData extractTableData(Class<?> tableClass) {
 		Table t = getTableAnnotation(tableClass);
 		List<ColumnData> lcd = new ArrayList<ColumnData>();
@@ -73,10 +76,14 @@ public class ClassMapper {
 					continue;
 				}
 			}
-			if(pk==null)
+			if (pk == null)
 				lcd.add(new ColumnData(c, otm, oto, f));
 		}
-		return new TableData(lcd, t, pk, pk_field, tableClass, foreign_keys);
+		TableData parentTable = null;
+		if (tableClass.getSuperclass() != Object.class) {
+			parentTable = this.extractTableData(tableClass.getSuperclass());
+		}
+		return new TableData(lcd, t, pk, pk_field, tableClass, parentTable, foreign_keys);
 
 	}
 
