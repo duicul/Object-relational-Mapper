@@ -89,7 +89,11 @@ public class MainTest {
 		for (Object whiteSuv : ol.get(wS)) {
 			WhiteSUV ws = (WhiteSUV) whiteSuv;
 			System.out.println(ol.getJSON(ws));
+			ws.age = 34;
+			ws.hp = 13;
+			ol.update(ws);
 		}
+		//ol.dropTable(WhiteSUV.class);
 	}
 
 }

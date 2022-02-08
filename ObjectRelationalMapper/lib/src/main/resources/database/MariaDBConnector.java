@@ -94,11 +94,16 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public String generateDeleteTableQuery(TableData td) {
-		String sql = "DROP TABLE " + td.table.name();
+	public List<String> generateDeleteTableQuery(TableData td) {
+		List<String> query = new LinkedList<String>();
+		String sql = "DROP TABLE " + td.table.name() + " ; ";
 		if (this.show_querries)
 			System.out.println(sql);
-		return sql;
+		query.add(sql);
+		if (td.parentTable != null) {
+			query.addAll(this.generateDeleteTableQuery(td.parentTable));
+		}
+		return query;
 	}
 
 	@Override
@@ -117,7 +122,7 @@ public class MariaDBConnector extends DBConnector {
 				val += current.lcd.get(0).f.get(o);
 			decl += current.lcd.get(0).col.name();
 		}
-		
+
 		for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
 			if (current.lcd.get(colInd).f.get(o) instanceof String)
 				val += ",'" + current.lcd.get(colInd).f.get(o) + "'";
@@ -125,7 +130,7 @@ public class MariaDBConnector extends DBConnector {
 				val += "," + current.lcd.get(colInd).f.get(o);
 			decl += "," + current.lcd.get(colInd).col.name();
 		}
-		
+
 		if (current.parentTable != null) {
 			if (current.lcd.size() > 0) {
 				val += " , ";
@@ -168,24 +173,42 @@ public class MariaDBConnector extends DBConnector {
 	@Override
 	public String generateUpdateQuery(Criteria c, Object o) throws IllegalArgumentException, IllegalAccessException {
 		TableData current = ClassMapper.getInstance().getTableData(o.getClass());
-		String sql = "UPDATE " + current.table.name();
-		sql += " SET ";
+		String sql = "UPDATE ";
+		String sqlSet = " SET ";
+		List<String> tables = new LinkedList<>();
+		boolean previous = false;
+		for (TableData parent = current.parentTable,
+				child = current; child != null; child = parent, parent = parent == null ? null : parent.parentTable) {
+			tables.add(child.table.name());
 
-		sql += current.lcd.get(0).col.name() + "=";
-		if (current.lcd.get(0).f.get(o) instanceof String)
-			sql += "'" + current.lcd.get(0).f.get(o) + "'";
-		else
-			sql += current.lcd.get(0).f.get(o);
-
-		for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
-			sql += "," + current.lcd.get(colInd).col.name() + "=";
-			if (current.lcd.get(colInd).f.get(o) instanceof String)
-				sql += "'" + current.lcd.get(colInd).f.get(o) + "'";
-			else
-				sql += current.lcd.get(colInd).f.get(o);
+			if (child.lcd.size() > 0) {
+				if (previous)
+					sqlSet += " , ";
+				sqlSet += child.table.name() + "." + child.lcd.get(0).col.name() + "=";
+				if (child.lcd.get(0).f.get(o) instanceof String)
+					sqlSet += "'" + child.lcd.get(0).f.get(o) + "'";
+				else
+					sqlSet += child.lcd.get(0).f.get(o);
+				previous = true;
+			}
+			for (int colInd = 1; colInd < child.lcd.size(); colInd++) {
+				sqlSet += "," + child.table.name() + "." + child.lcd.get(colInd).col.name() + "=";
+				if (child.lcd.get(colInd).f.get(o) instanceof String)
+					sqlSet += "'" + child.lcd.get(colInd).f.get(o) + "'";
+				else
+					sqlSet += child.lcd.get(colInd).f.get(o);
+			}
 		}
-		sql += " WHERE ";
-		sql += c.getCriteriaText();
+
+		sql += current.table.name() + " ";
+		for (TableData parent = current.parentTable,
+				child = current; parent != null; child = parent, parent = parent.parentTable) {
+			sql += " INNER JOIN " + parent.table.name() + " ON " + child.table.name() + "." + child.parentTableFK
+					+ " = " + parent.table.name() + "." + parent.pk.name();
+		}
+		sqlSet += " WHERE ";
+		sqlSet += c.getCriteriaText();
+		sql += sqlSet;
 		if (this.show_querries)
 			System.out.println(sql);
 		return sql;
@@ -194,7 +217,22 @@ public class MariaDBConnector extends DBConnector {
 	@Override
 	public String generateDeleteQuery(Criteria c) {
 		TableData current = c.td;
-		String sql = "DELETE FROM " + current.table.name();
+		String sql = " FROM " + current.table.name();
+		String tablejoin = " ";
+		String deleteSql = " DELETE ";
+		List<String> tables = new LinkedList<>();
+		for (TableData parent = current.parentTable,
+				child = current; parent != null; child = parent, parent = parent.parentTable) {
+			tables.add(parent.table.name());
+			tablejoin += " INNER JOIN " + parent.table.name() + " ON " + child.table.name() + "." + child.parentTableFK
+					+ " = " + parent.table.name() + "." + parent.pk.name();
+		}
+		for (int i = tables.size() - 1; i >= 0; i--) {
+			deleteSql += " " + tables.get(i) + " , ";
+		}
+		deleteSql += " " + current.table.name() + " ";
+		sql = deleteSql + sql;
+		sql += tablejoin;
 		sql += " WHERE ";
 		sql += c.getCriteriaText();
 		if (this.show_querries)

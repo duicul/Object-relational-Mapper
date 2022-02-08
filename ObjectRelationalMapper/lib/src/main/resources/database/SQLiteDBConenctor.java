@@ -42,12 +42,6 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
-	public String generateDeleteTableQuery(TableData td) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public List<String> generateCreateQuery(Object o,Class<?> subClas) throws IllegalArgumentException, IllegalAccessException {
 		// TODO Auto-generated method stub
 		return null;
@@ -73,6 +67,12 @@ public class SQLiteDBConenctor extends DBConnector {
 
 	@Override
 	public Criteria createCriteria(TableData current) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> generateDeleteTableQuery(TableData td) {
 		// TODO Auto-generated method stub
 		return null;
 	}

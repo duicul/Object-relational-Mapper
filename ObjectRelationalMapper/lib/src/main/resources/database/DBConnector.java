@@ -18,6 +18,11 @@ import loader.TableData;
 
 public abstract class DBConnector {
 	
+	/**
+	 * Create table , from subclass to superclass
+	 * @param o
+	 * @return
+	 */
 	public boolean createTable(TableData current) {
 		try {
 			Connection con = this.getConnection();
@@ -33,13 +38,20 @@ public abstract class DBConnector {
 			return false;
 		}
 	}
+	
+	/**
+	 * Create / Insert data , from superclass to subclass
+	 * @param o
+	 * @return
+	 */
 	public boolean deleteTable(TableData current) {
 		try {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
-			String sql = this.generateDeleteTableQuery(current);
-			stmt.executeUpdate(sql);
-			ResultSet rs = stmt.executeQuery(sql);
+			List<String> sql = this.generateDeleteTableQuery(current);
+			for(String query:sql)
+				stmt.addBatch(query);
+			stmt.executeBatch();;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -47,6 +59,11 @@ public abstract class DBConnector {
 		return true;
 	}
 	
+	/**
+	 * Create / Insert data , from subclass to superclass
+	 * @param o
+	 * @return
+	 */
 	public boolean create(Object o) {
 		try {
 			Connection con = this.getConnection();
@@ -62,6 +79,13 @@ public abstract class DBConnector {
 		}
 	}
 
+	/**
+	 * Read from joined tables based on a criteria (instantiates the objects)
+	 * @param c
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	public List<Object> read(Criteria c) throws ClassNotFoundException, SQLException {
 		TableData current = c.td;
 		List<Object> lo = new LinkedList<Object>();
@@ -108,7 +132,13 @@ public abstract class DBConnector {
 		}
 		return lo;
 	}
-
+	
+	/**
+	 * Update values into table based on criteria
+	 * @param c
+	 * @param o
+	 * @return
+	 */
 	public boolean update(Criteria c, Object o) {
 		try {
 			
@@ -123,6 +153,11 @@ public abstract class DBConnector {
 		}
 	}
 	
+	/**
+	 * Delete data from joined tables (inheritance) using a criteria
+	 * @param c
+	 * @return
+	 */
 	public boolean delete(Criteria c) {
 		try {
 			Connection con = this.getConnection();
@@ -138,7 +173,7 @@ public abstract class DBConnector {
 	}
 	
 	public abstract List<String> generateCreateTableQuery(TableData td);
-	public abstract String generateDeleteTableQuery(TableData td);
+	public abstract List<String> generateDeleteTableQuery(TableData td);
 	public abstract List<String> generateCreateQuery(Object o,Class<?> subClass)  throws IllegalArgumentException, IllegalAccessException;
 	public abstract String generateReadQuery(Criteria c) throws ClassNotFoundException, SQLException;
 	public abstract String generateUpdateQuery(Criteria c,Object o) throws IllegalArgumentException, IllegalAccessException ;
