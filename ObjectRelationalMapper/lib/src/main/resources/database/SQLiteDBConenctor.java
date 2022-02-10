@@ -59,7 +59,7 @@ public class SQLiteDBConenctor extends DBConnector {
 					sql += " CONSTRAINT " + td.table.name() + td.parentTable.table.name();
 					sql += " FOREIGN KEY (" + td.parentTableFK + ") REFERENCES " + td.parentTable.table.name() + " ("
 							+ td.parentTable.pk.name() + ")";
-					sql += " ON DELETE CASCADE ON UPDATE RESTRICT";
+					sql += " ON DELETE CASCADE ON UPDATE CASCADE";
 				}
 		}
 		sql += ");";

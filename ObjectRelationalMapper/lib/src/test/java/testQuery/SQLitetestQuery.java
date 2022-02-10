@@ -285,7 +285,7 @@ public class SQLitetestQuery {
 			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
 
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE CASCADE);");
 			assertEquals(query.get(1),
 					"CREATE TABLE IF NOT EXISTS Car(Model TEXT , Color TEXT , RegistrationNumber TEXT , Age INTEGER , cid  INTEGER  PRIMARY KEY AUTOINCREMENT);");
 		} catch (Exception e) {
@@ -301,9 +301,9 @@ public class SQLitetestQuery {
 			List<String> query = this.dbc
 					.generateCreateTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  PRIMARY KEY AUTOINCREMENT , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  PRIMARY KEY AUTOINCREMENT , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE CASCADE);");
 			assertEquals(query.get(1),
-					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE CASCADE);");
 			assertEquals(query.get(2),
 					"CREATE TABLE IF NOT EXISTS Car(Model TEXT , Color TEXT , RegistrationNumber TEXT , Age INTEGER , cid  INTEGER  PRIMARY KEY AUTOINCREMENT);");
 		} catch (Exception e) {
