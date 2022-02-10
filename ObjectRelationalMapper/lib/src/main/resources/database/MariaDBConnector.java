@@ -1,6 +1,7 @@
 package database;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -53,7 +54,7 @@ public class MariaDBConnector extends DBConnector {
 		String sql = "CREATE TABLE IF NOT EXISTS " + td.table.name();
 		sql += "(";
 		for (ColumnData cd : td.lcd) {
-			String coltype = DBConnector.getDataBaseType(cd.f.getGenericType());
+			String coltype = this.getDataBaseType(cd.f.getGenericType());
 			if (coltype != null)
 				if (cd.col != null)
 					sql += cd.col.name() + " " + coltype + " , ";
@@ -70,7 +71,7 @@ public class MariaDBConnector extends DBConnector {
 			sql += " , " + foreignTab.pk.name() + " " + foreignTab.pk.type();
 		}
 		if (td.parentTable != null && td.parentTable.pk_field != null) {
-			String parentPkType = DBConnector.getDataBaseType(td.parentTable.pk_field.getGenericType());
+			String parentPkType = this.getDataBaseType(td.parentTable.pk_field.getGenericType());
 			if (parentPkType != null)
 				if (td.parentTable.pk != null) {
 					sql += " , " + td.parentTableFK + " " + parentPkType + " , ";
@@ -163,7 +164,6 @@ public class MariaDBConnector extends DBConnector {
 					+ " = " + parent.table.name() + "." + parent.pk.name();
 		}
 		sql += tablejoin;
-		sql += " WHERE ";
 		sql += c.getCriteriaText();
 		if (this.show_querries)
 			System.out.println(sql);
@@ -171,7 +171,7 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public String generateUpdateQuery(Criteria c, Object o) throws IllegalArgumentException, IllegalAccessException {
+	public List<String> generateUpdateQuery(Criteria c, Object o) throws IllegalArgumentException, IllegalAccessException {
 		TableData current = ClassMapper.getInstance().getTableData(o.getClass());
 		String sql = "UPDATE ";
 		String sqlSet = " SET ";
@@ -206,12 +206,13 @@ public class MariaDBConnector extends DBConnector {
 			sql += " INNER JOIN " + parent.table.name() + " ON " + child.table.name() + "." + child.parentTableFK
 					+ " = " + parent.table.name() + "." + parent.pk.name();
 		}
-		sqlSet += " WHERE ";
 		sqlSet += c.getCriteriaText();
 		sql += sqlSet;
 		if (this.show_querries)
 			System.out.println(sql);
-		return sql;
+		List<String> ret =new LinkedList<String>();
+		ret.add(sql);
+		return ret;
 	}
 
 	@Override
@@ -233,10 +234,24 @@ public class MariaDBConnector extends DBConnector {
 		deleteSql += " " + current.table.name() + " ";
 		sql = deleteSql + sql;
 		sql += tablejoin;
-		sql += " WHERE ";
 		sql += c.getCriteriaText();
 		if (this.show_querries)
 			System.out.println(sql);
 		return sql;
+	}
+	
+	@Override
+	public String getDataBaseType(Type type) {
+		if(type.equals(int.class)||type.equals(Integer.class))
+			return "INTEGER";
+		if(type.equals(float.class)||type.equals(Float.class))
+			return "FLOAT";
+		if(type.equals(double.class)||type.equals(Double.class))
+			return "DOUBLE";
+		if(type.equals(String.class))
+			return "VARCHAR(255)";
+		if(type.equals(char.class))
+			return "VARCHAR(1)";
+		return null;
 	}
 }

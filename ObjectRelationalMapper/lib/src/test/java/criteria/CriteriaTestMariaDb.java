@@ -36,7 +36,7 @@ public class CriteriaTestMariaDb {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		assertEquals(this.c.getCriteriaText(), "Nota.Value < 9");
+		assertEquals(this.c.getCriteriaText(), " WHERE Nota.Value < 9");
 	}
 
 	@Test
@@ -48,7 +48,7 @@ public class CriteriaTestMariaDb {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		assertEquals(this.c.getCriteriaText(), "Nota.Value LIKE 'ana%'");
+		assertEquals(this.c.getCriteriaText(), " WHERE Nota.Value LIKE 'ana%'");
 	}
 
 	@Test
@@ -62,7 +62,13 @@ public class CriteriaTestMariaDb {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		assertEquals(this.c.getCriteriaText(), "Nota.Value LIKE 'ana%' AND Nota.Value > 3");
+		assertEquals(this.c.getCriteriaText(), " WHERE Nota.Value LIKE 'ana%' AND Nota.Value > 3");
+	}
+	
+	@Test
+	public void testNoCriteria() {
+		this.c = this.ol.createCriteria(Nota.class);
+		assertEquals(this.c.getCriteriaText(), "");
 	}
 
 }

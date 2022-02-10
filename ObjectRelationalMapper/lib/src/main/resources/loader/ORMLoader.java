@@ -101,7 +101,9 @@ public class ORMLoader {
 	public boolean update(Object o) {
 		Criteria c = this.createCriteria(o.getClass());
 		try {
-			c.eq(c.td.pk.name(), c.td.pk_field.get(o));
+			for(TableData td = c.td;td!=null;td=td.parentTable) {
+				c.eq(td.pk.name(), td.pk_field.get(o));
+			}
 		} catch (IllegalArgumentException | IllegalAccessException | WrongColumnName e) {
 			e.printStackTrace();
 			return false;

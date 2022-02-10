@@ -65,7 +65,7 @@ public class ExceptionTestMariaDb {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 		}
-		assertEquals(this.c.getCriteriaText(), "Nota.Value LIKE 'ana%'");
+		assertEquals(this.c.getCriteriaText(), " WHERE Nota.Value LIKE 'ana%'");
 	}
 
 }

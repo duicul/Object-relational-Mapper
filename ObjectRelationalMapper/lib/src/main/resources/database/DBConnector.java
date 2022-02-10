@@ -17,9 +17,10 @@ import loader.ColumnData;
 import loader.TableData;
 
 public abstract class DBConnector {
-	
+
 	/**
 	 * Create table , from subclass to superclass
+	 * 
 	 * @param o
 	 * @return
 	 */
@@ -28,7 +29,7 @@ public abstract class DBConnector {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
 			List<String> sql = this.generateCreateTableQuery(current);
-			for(int i=sql.size()-1;i>=0;i--)
+			for (int i = sql.size() - 1; i >= 0; i--)
 				stmt.addBatch(sql.get(i));
 			stmt.executeBatch();
 			con.close();
@@ -38,9 +39,10 @@ public abstract class DBConnector {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Create / Insert data , from superclass to subclass
+	 * 
 	 * @param o
 	 * @return
 	 */
@@ -49,18 +51,20 @@ public abstract class DBConnector {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
 			List<String> sql = this.generateDeleteTableQuery(current);
-			for(String query:sql)
+			for (String query : sql)
 				stmt.addBatch(query);
-			stmt.executeBatch();;
+			stmt.executeBatch();
+			;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Create / Insert data , from subclass to superclass
+	 * 
 	 * @param o
 	 * @return
 	 */
@@ -68,8 +72,8 @@ public abstract class DBConnector {
 		try {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
-			List<String> sql = this.generateCreateQuery(o,o.getClass());
-			for(int i=sql.size()-1;i>=0;i--)
+			List<String> sql = this.generateCreateQuery(o, o.getClass());
+			for (int i = sql.size() - 1; i >= 0; i--)
 				stmt.addBatch(sql.get(i));
 			stmt.executeBatch();
 			return true;
@@ -81,6 +85,7 @@ public abstract class DBConnector {
 
 	/**
 	 * Read from joined tables based on a criteria (instantiates the objects)
+	 * 
 	 * @param c
 	 * @return
 	 * @throws ClassNotFoundException
@@ -114,7 +119,9 @@ public abstract class DBConnector {
 						for (ColumnData cd : curTable.lcd) {
 							if (cd.col != null && col_name.equals(cd.col.name())) {
 								Object obj = rs.getObject(i);
-								cd.f.set(ret, obj);
+								Class<?> fieldClass = cd.f.getType();
+								cd.f.set(ret, this.changeTypes(obj, fieldClass));
+
 								break;
 							}
 							if (curTable.pk != null && col_name.equals(curTable.pk.name())) {
@@ -132,29 +139,54 @@ public abstract class DBConnector {
 		}
 		return lo;
 	}
-	
+
+	private Object changeTypes(Object obj, Class<?> castClass) {
+		Object changed = obj;
+		if (obj instanceof Double) {
+			if (castClass == float.class)
+				return ((Double) obj).floatValue();
+			else if (castClass == double.class)
+				return ((Double) obj).doubleValue();
+		} else if (obj instanceof Float) {
+			if (castClass == float.class)
+				return ((Float) obj).floatValue();
+		} else {
+			if (obj instanceof Integer) {
+				if (castClass == int.class)
+					return ((Integer) obj).intValue();
+			}
+		}
+		return changed;
+	}
+
 	/**
 	 * Update values into table based on criteria
+	 * 
 	 * @param c
 	 * @param o
 	 * @return
 	 */
 	public boolean update(Criteria c, Object o) {
 		try {
-			
+
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
-			String sql = this.generateUpdateQuery(c, o);
-			stmt.executeUpdate(sql);
-			return true;
+			List<String> query = this.generateUpdateQuery(c, o);
+			if (query.size() > 0) {
+				String sql = query.get(0);
+				stmt.executeUpdate(sql);
+				return true;
+			} else
+				return false;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Delete data from joined tables (inheritance) using a criteria
+	 * 
 	 * @param c
 	 * @return
 	 */
@@ -164,36 +196,30 @@ public abstract class DBConnector {
 			Statement stmt = con.createStatement();
 			String sql = this.generateDeleteQuery(c);
 			stmt.executeUpdate(sql);
-			ResultSet rs = stmt.executeQuery(sql);
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 			return false;
 		}
 		return true;
 	}
-	
+
 	public abstract List<String> generateCreateTableQuery(TableData td);
+
 	public abstract List<String> generateDeleteTableQuery(TableData td);
-	public abstract List<String> generateCreateQuery(Object o,Class<?> subClass)  throws IllegalArgumentException, IllegalAccessException;
+
+	public abstract List<String> generateCreateQuery(Object o, Class<?> subClass)
+			throws IllegalArgumentException, IllegalAccessException;
+
 	public abstract String generateReadQuery(Criteria c) throws ClassNotFoundException, SQLException;
-	public abstract String generateUpdateQuery(Criteria c,Object o) throws IllegalArgumentException, IllegalAccessException ;
+
+	public abstract List<String> generateUpdateQuery(Criteria c, Object o)
+			throws IllegalArgumentException, IllegalAccessException;
+
 	public abstract String generateDeleteQuery(Criteria c);
-	
+
 	public abstract Connection getConnection() throws SQLException, ClassNotFoundException;
-	
+
 	public abstract Criteria createCriteria(TableData current);
-	
-	public static String getDataBaseType(Type type) {
-		if(type.equals(int.class)||type.equals(Integer.class))
-			return "INTEGER";
-		if(type.equals(float.class)||type.equals(Float.class))
-			return "FLOAT";
-		if(type.equals(double.class)||type.equals(Double.class))
-			return "DOUBLE";
-		if(type.equals(String.class))
-			return "VARCHAR(255)";
-		if(type.equals(char.class))
-			return "VARCHAR(1)";
-		return null;
-	}
+
+	public abstract String getDataBaseType(Type type);
 }

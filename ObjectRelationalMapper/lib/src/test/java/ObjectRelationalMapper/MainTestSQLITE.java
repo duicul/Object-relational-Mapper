@@ -1,27 +1,29 @@
 package ObjectRelationalMapper;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import criteria.Criteria;
 import database.DBConnector;
 import database.MariaDBConnector;
+import database.SQLiteDBConenctor;
 import exception.WrongColumnName;
 import loader.ORMLoader;
-import testClasses.Nota;
-import testClasses.SUV;
-import testClasses.WhiteSUV;
 import testClasses.Car;
+import testClasses.Nota;
+import testClasses.WhiteSUV;
 
-public class MainTest {
-	private static final Logger logger = LogManager.getLogger(MainTest.class);
-
-	public static void main(String[] args) {
-		logger.error("test");
-		DBConnector dbc = new MariaDBConnector(3306, "localhost", "root", "", "test_orm", true);
+public class MainTestSQLITE {
+	public static void main(String argv[]) {
+		String currentPath = System.getProperty("user.dir");
+		Path p = Paths.get(currentPath).getParent();
+		System.out.println(currentPath);
+		System.out.println(p);
+		DBConnector dbc = new SQLiteDBConenctor(p + "\\test_db.db", true);
 		ORMLoader ol = new ORMLoader(dbc);
+		ol.createTable(Nota.class);
+		ol.insert(new Nota(7));
 		ol.createTable(Nota.class);
 		Criteria c = ol.createCriteria(Nota.class);
 		try {
@@ -93,7 +95,6 @@ public class MainTest {
 			ws.hp = 13;
 			ol.update(ws);
 		}
-		//ol.dropTable(WhiteSUV.class);
+		//ol.dropTable(WhiteSUV.class);*/
 	}
-
 }

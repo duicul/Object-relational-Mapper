@@ -40,6 +40,8 @@ public class ClassMapper {
 
 	private TableData extractTableData(Class<?> tableClass) {
 		Table t = getTableAnnotation(tableClass);
+		if(t==null)
+			return null;
 		List<ColumnData> lcd = new ArrayList<ColumnData>();
 		PK pk = null;
 		Field pk_field = null;

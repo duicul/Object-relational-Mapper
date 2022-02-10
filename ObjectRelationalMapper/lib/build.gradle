@@ -26,7 +26,9 @@ dependencies {
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:29.0-jre'
     implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '3.0.3'
+    
     implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.36.0.3'
+    
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.8.2'

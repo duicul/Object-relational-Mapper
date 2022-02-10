@@ -36,4 +36,13 @@ public class TableData extends TableInfo {
 		}
 		return false;
 	}
+
+	public boolean containsColumn(String col) {
+		for (ColumnData cd : this.lcd)
+			if (cd.col.name().equals(col))
+				return true;
+		if(this.pk.name().equals(col))
+			return true;
+		return false;
+	}
 }
