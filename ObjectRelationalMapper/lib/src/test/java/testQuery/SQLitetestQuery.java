@@ -101,7 +101,8 @@ public class SQLitetestQuery {
 	@Test
 	public void testCreateQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120), SUV.class);
+			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120, null, null),
+					SUV.class);
 
 			assertEquals(query.get(0), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , PARENT_FOREIGN_KEY)");
 		} catch (Exception e) {
@@ -114,7 +115,8 @@ public class SQLitetestQuery {
 	@Test
 	public void testCreateQuery3Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120), WhiteSUV.class);
+			List<String> query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120, null, null),
+					WhiteSUV.class);
 
 			assertEquals(query.get(0), "INSERT INTO WhiteSUV (SUVsid) VALUES  (PARENT_FOREIGN_KEY)");
 
@@ -144,7 +146,7 @@ public class SQLitetestQuery {
 		this.c = this.ol.createCriteria(SUV.class);
 		try {
 			this.c.gt("HorsePower", 10);
-			Car car = new SUV("BMW", "red", "TM43GOG", 12, 1200);
+			Car car = new SUV("BMW", "red", "TM43GOG", 12, 1200, null, null);
 			TableData tdsuv = ClassMapper.getInstance().getTableData(car.getClass());
 			tdsuv.pk_field.set(car, 3);
 			TableData tdcar = tdsuv.parentTable;
@@ -163,7 +165,7 @@ public class SQLitetestQuery {
 		this.c = this.ol.createCriteria(SUV.class);
 		try {
 			this.c.gt("HorsePower", 10);
-			Car car = new WhiteSUV("BMW", "TM43GOG", 12, 1200);
+			Car car = new WhiteSUV("BMW", "TM43GOG", 12, 1200, null, null);
 			TableData tdwsuv = ClassMapper.getInstance().getTableData(car.getClass());
 			tdwsuv.pk_field.set(car, 3);
 			TableData tdsuv = tdwsuv.parentTable;
@@ -269,7 +271,9 @@ public class SQLitetestQuery {
 	@Test
 	public void testCreateTableQuery() {
 		try {
-			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(Nota.class));
+			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(Nota.class),
+					null);
+			assertEquals(query.size(), 1);
 			assertEquals(query.get(0),
 					"CREATE TABLE IF NOT EXISTS Nota(Value REAL , nid  INTEGER  PRIMARY KEY AUTOINCREMENT);");
 		} catch (Exception e) {
@@ -282,12 +286,17 @@ public class SQLitetestQuery {
 	@Test
 	public void testCreateTableQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
-
+			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(SUV.class),
+					null);
+			assertEquals(query.size(), 4);
 			assertEquals(query.get(0),
 					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE CASCADE);");
 			assertEquals(query.get(1),
 					"CREATE TABLE IF NOT EXISTS Car(Model TEXT , Color TEXT , RegistrationNumber TEXT , Age INTEGER , cid  INTEGER  PRIMARY KEY AUTOINCREMENT);");
+			assertEquals(query.get(2),
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE CASCADE);");
+			assertEquals(query.get(3),
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio REAL , tid  INTEGER  PRIMARY KEY AUTOINCREMENT , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE CASCADE);");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -299,13 +308,18 @@ public class SQLitetestQuery {
 	public void testCreateTableQuery3Hierarchy() {
 		try {
 			List<String> query = this.dbc
-					.generateCreateTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
+					.generateCreateTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class), null);
+			assertEquals(query.size(), 5);
 			assertEquals(query.get(0),
 					"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  PRIMARY KEY AUTOINCREMENT , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE CASCADE);");
 			assertEquals(query.get(1),
 					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE CASCADE);");
 			assertEquals(query.get(2),
 					"CREATE TABLE IF NOT EXISTS Car(Model TEXT , Color TEXT , RegistrationNumber TEXT , Age INTEGER , cid  INTEGER  PRIMARY KEY AUTOINCREMENT);");
+			assertEquals(query.get(3),
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  PRIMARY KEY AUTOINCREMENT , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE CASCADE);");
+			assertEquals(query.get(4),
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio REAL , tid  INTEGER  PRIMARY KEY AUTOINCREMENT , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE CASCADE);");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

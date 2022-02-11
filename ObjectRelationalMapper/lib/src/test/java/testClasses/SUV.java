@@ -1,6 +1,9 @@
 package testClasses;
 
+import java.util.List;
+
 import annotation.Column;
+import annotation.OneToOne;
 import annotation.PK;
 import annotation.Table;
 
@@ -10,13 +13,16 @@ public class SUV extends Car {
     public int hp;
 	@PK(name="sid")
 	public int sid;
+	@OneToOne()
+	public Traction traction;
 	
 	public SUV() {
 		
 	}
 	
-	public SUV(String model,String color,String reg_no, int age, int hp) {
-		super(model, color, reg_no,  age);
+	public SUV(String model,String color,String reg_no, int age, int hp,List<Door> doors,Traction traction) {
+		super(model, color, reg_no,  age,doors);
 		this.hp=hp;
+		this.traction=traction;
 	}
 }

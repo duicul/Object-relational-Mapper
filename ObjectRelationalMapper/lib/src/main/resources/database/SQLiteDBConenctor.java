@@ -31,7 +31,7 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateCreateTableQuery(TableData td) {
+	public List<String> generateCreateTableQuery(TableData td, TableData foreignTable) {
 		List<String> batch = new LinkedList<String>();
 		String sql = "CREATE TABLE IF NOT EXISTS " + td.table.name();
 		sql += "(";
@@ -48,8 +48,13 @@ public class SQLiteDBConenctor extends DBConnector {
 		if (td.pk != null) {
 			sql += td.pk.name() + " " + td.pk.type() + " PRIMARY KEY " + (td.pk.autoincrement() ? "AUTOINCREMENT" : "");
 		}
-		for (TableData foreignTab : td.foreign_val_key) {
-			sql += " , " + foreignTab.pk.name() + " " + foreignTab.pk.type();
+		if (foreignTable != null) {
+			String parentPkType = this.getDataBaseType(foreignTable.pk_field.getGenericType());
+			sql += " , " + foreignTable.getAsForeignKey() + " " + parentPkType + " , ";
+			sql += " CONSTRAINT " + td.table.name() + foreignTable.table.name();
+			sql += " FOREIGN KEY (" + foreignTable.getAsForeignKey() + ") REFERENCES " + foreignTable.table.name()
+					+ " (" + foreignTable.pk.name() + ")";
+			sql += " ON DELETE CASCADE ON UPDATE CASCADE";
 		}
 		if (td.parentTable != null && td.parentTable.pk_field != null) {
 			String parentPkType = this.getDataBaseType(td.parentTable.pk_field.getGenericType());
@@ -67,11 +72,11 @@ public class SQLiteDBConenctor extends DBConnector {
 			System.out.println(sql);
 
 		batch.add(sql);
-		;
 		if (td.parentTable != null) {
-			batch.addAll(this.generateCreateTableQuery(td.parentTable));
+			batch.addAll(this.generateCreateTableQuery(td.parentTable, null));
 		}
-
+		for (TableData assocTable : td.associatedTables)
+			batch.addAll(this.generateCreateTableQuery(assocTable, td));
 		return batch;
 	}
 

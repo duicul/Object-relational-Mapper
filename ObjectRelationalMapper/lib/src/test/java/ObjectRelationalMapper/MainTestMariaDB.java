@@ -51,7 +51,7 @@ public class MainTestMariaDB {
 			System.out.println(ol.getJSON(cr));
 		}
 		ol.delete(ccar);
-		ol.insert(new Car("BMW", "roz", "MH89GOG", 12));
+		ol.insert(new Car("BMW", "roz", "MH89GOG", 12, null));
 		objCar = ol.get(ccar);
 		for (Object car : objCar) {
 			Car cr = (Car) car;
@@ -77,7 +77,7 @@ public class MainTestMariaDB {
 		}
 
 		ol.createTable(WhiteSUV.class);
-		ol.insert(new WhiteSUV("BMW", "MH69KOL", 4, 120));
+		ol.insert(new WhiteSUV("BMW", "MH69KOL", 4, 120, null, null));
 
 		Criteria wS = ol.createCriteria(WhiteSUV.class);
 		try {
@@ -93,7 +93,7 @@ public class MainTestMariaDB {
 			ws.hp = 13;
 			ol.update(ws);
 		}
-		//ol.dropTable(WhiteSUV.class);
+		// ol.dropTable(WhiteSUV.class);
 	}
 
 }

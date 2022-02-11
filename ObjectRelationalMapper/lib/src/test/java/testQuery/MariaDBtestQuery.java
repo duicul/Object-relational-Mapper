@@ -26,8 +26,8 @@ import testClasses.WhiteSUV;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class MariaDBtestQuery {
-	private DBConnector dbc,mocked_dbc;
-	private ORMLoader ol,mocked_ol;
+	private DBConnector dbc, mocked_dbc;
+	private ORMLoader ol, mocked_ol;
 	private Criteria c;
 	private Connection mocked_con;
 
@@ -97,7 +97,7 @@ public class MariaDBtestQuery {
 	public void testCreateQuery() {
 		try {
 			List<String> query = this.dbc.generateCreateQuery(new Nota(4), Nota.class);
-
+			assertEquals(query.size(), 1);
 			assertEquals(query.get(0), "INSERT INTO Nota (Value) VALUES  (4.0)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -109,8 +109,9 @@ public class MariaDBtestQuery {
 	@Test
 	public void testCreateQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120), SUV.class);
-
+			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120, null, null),
+					SUV.class);
+			assertEquals(query.size(), 2);
 			assertEquals(query.get(0), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
 			assertEquals(query.get(1),
 					"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
@@ -124,8 +125,9 @@ public class MariaDBtestQuery {
 	@Test
 	public void testCreateQuery3Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120), WhiteSUV.class);
-
+			List<String> query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120, null, null),
+					WhiteSUV.class);
+			assertEquals(query.size(), 3);
 			assertEquals(query.get(0), "INSERT INTO WhiteSUV (SUVsid) VALUES  (LAST_INSERT_ID())");
 			assertEquals(query.get(1), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
 			assertEquals(query.get(2),
@@ -157,7 +159,7 @@ public class MariaDBtestQuery {
 		this.c = this.ol.createCriteria(SUV.class);
 		try {
 			this.c.gt("HorsePower", 10);
-			Car car = new SUV("BMW", "red", "TM43GOG", 12, 1200);
+			Car car = new SUV("BMW", "red", "TM43GOG", 12, 1200, null, null);
 			TableData tdsuv = ClassMapper.getInstance().getTableData(car.getClass());
 			tdsuv.pk_field.set(car, 3);
 			TableData tdcar = tdsuv.parentTable;
@@ -177,7 +179,7 @@ public class MariaDBtestQuery {
 		this.c = this.ol.createCriteria(SUV.class);
 		try {
 			this.c.gt("HorsePower", 10);
-			Car car = new WhiteSUV("BMW", "TM43GOG", 12, 1200);
+			Car car = new WhiteSUV("BMW", "TM43GOG", 12, 1200, null, null);
 			TableData tdwsuv = ClassMapper.getInstance().getTableData(car.getClass());
 			tdwsuv.pk_field.set(car, 3);
 			TableData tdsuv = tdwsuv.parentTable;
@@ -257,7 +259,7 @@ public class MariaDBtestQuery {
 	public void testDeleteTableQuery2Hierarchy() {
 		try {
 			List<String> query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
-
+			assertEquals(query.size(), 2);
 			assertEquals(query.get(0), "DROP TABLE SUV ; ");
 			assertEquals(query.get(1), "DROP TABLE Car ; ");
 		} catch (Exception e) {
@@ -272,6 +274,7 @@ public class MariaDBtestQuery {
 		try {
 			List<String> query = this.dbc
 					.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
+			assertEquals(query.size(), 3);
 			assertEquals(query.get(0), "DROP TABLE WhiteSUV ; ");
 			assertEquals(query.get(1), "DROP TABLE SUV ; ");
 			assertEquals(query.get(2), "DROP TABLE Car ; ");
@@ -285,7 +288,9 @@ public class MariaDBtestQuery {
 	@Test
 	public void testCreateTableQuery() {
 		try {
-			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(Nota.class));
+			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(Nota.class),
+					null);
+			assertEquals(query.size(), 1);
 			assertEquals(query.get(0),
 					"CREATE TABLE IF NOT EXISTS Nota(Value FLOAT , nid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( nid ) );");
 		} catch (Exception e) {
@@ -296,14 +301,36 @@ public class MariaDBtestQuery {
 	}
 
 	@Test
+	public void testCreateTableQueryAssociationSimple() {
+		try {
+			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(Car.class),
+					null);
+			assertEquals(query.size(), 2);
+			assertEquals(query.get(0),
+					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+			assertEquals(query.get(1),
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
+	}
+
+	@Test
 	public void testCreateTableQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
-
+			List<String> query = this.dbc.generateCreateTableQuery(ClassMapper.getInstance().getTableData(SUV.class),
+					null);
+			assertEquals(query.size(), 4);
 			assertEquals(query.get(0),
 					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),
 					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+			assertEquals(query.get(2),
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+			assertEquals(query.get(3),
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -315,23 +342,28 @@ public class MariaDBtestQuery {
 	public void testCreateTableQuery3Hierarchy() {
 		try {
 			List<String> query = this.dbc
-					.generateCreateTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
+					.generateCreateTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class), null);
+			assertEquals(query.size(), 5);
 			assertEquals(query.get(0),
 					"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( wsid )  , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),
 					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(2),
 					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+			assertEquals(query.get(3),
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+			assertEquals(query.get(4),
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			fail();
 		}
 	}
-	
+
 	@Test
 	public void testMockCreate() {
-		
+
 		this.mocked_ol.createTable(Nota.class);
 	}
 }

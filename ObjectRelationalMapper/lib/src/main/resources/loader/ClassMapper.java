@@ -6,6 +6,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class ClassMapper {
 		List<ColumnData> lcd = new ArrayList<ColumnData>();
 		PK pk = null;
 		Field pk_field = null;
-		List<TableData> foreign_keys = new ArrayList<TableData>();
+		List<TableData> foreignTables = new LinkedList<TableData>();
 		for (Field f : tableClass.getDeclaredFields()) {
 			Column c = null;
 			OneToMany otm = null;
@@ -61,13 +62,13 @@ public class ClassMapper {
 					if (list_oneto instanceof ParameterizedType) {
 						ParameterizedType paramtype = (ParameterizedType) list_oneto;
 						if (((ParameterizedType) list_oneto).getActualTypeArguments().length > 0)
-							foreign_keys.add(this.extractTableData((Class<?>) paramtype.getActualTypeArguments()[0]));
+							foreignTables.add(this.extractTableData((Class<?>) paramtype.getActualTypeArguments()[0]));
 					}
 					continue;
 				}
 				if (a instanceof OneToOne) {
 					oto = (OneToOne) a;
-					foreign_keys.add(this.extractTableData((Class<?>) f.getGenericType()));
+					foreignTables.add(this.extractTableData((Class<?>) f.getGenericType()));
 					continue;
 				}
 				if (a instanceof PK) {
@@ -84,8 +85,7 @@ public class ClassMapper {
 			parentTable = this.extractTableData(tableClass.getSuperclass());
 			this.cacheTableData.put(tableClass.getSuperclass(), parentTable);
 		}
-		return new TableData(lcd, t, pk, pk_field, tableClass, parentTable, foreign_keys);
-
+		return new TableData(lcd, t, pk, pk_field, tableClass, parentTable, foreignTables);
 	}
 
 	public static Table getTableAnnotation(Class<?> tableClass) {

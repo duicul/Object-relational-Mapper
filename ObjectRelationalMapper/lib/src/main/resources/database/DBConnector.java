@@ -28,7 +28,7 @@ public abstract class DBConnector {
 		try {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
-			List<String> sql = this.generateCreateTableQuery(current);
+			List<String> sql = this.generateCreateTableQuery(current, null);
 			for (int i = sql.size() - 1; i >= 0; i--)
 				stmt.addBatch(sql.get(i));
 			stmt.executeBatch();
@@ -203,7 +203,7 @@ public abstract class DBConnector {
 		return true;
 	}
 
-	public abstract List<String> generateCreateTableQuery(TableData td);
+	public abstract List<String> generateCreateTableQuery(TableData td, TableData foreignTable);
 
 	public abstract List<String> generateDeleteTableQuery(TableData td);
 

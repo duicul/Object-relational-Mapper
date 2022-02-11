@@ -49,7 +49,7 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateCreateTableQuery(TableData td) {
+	public List<String> generateCreateTableQuery(TableData td, TableData foreignTable) {
 		List<String> batch = new LinkedList<String>();
 		String sql = "CREATE TABLE IF NOT EXISTS " + td.table.name();
 		sql += "(";
@@ -67,8 +67,13 @@ public class MariaDBConnector extends DBConnector {
 			sql += td.pk.name() + " " + td.pk.type() + " " + (td.pk.autoincrement() ? "AUTO_INCREMENT" : "") + " , ";
 			sql += " PRIMARY KEY ( " + td.pk.name() + " ) ";
 		}
-		for (TableData foreignTab : td.foreign_val_key) {
-			sql += " , " + foreignTab.pk.name() + " " + foreignTab.pk.type();
+		if (foreignTable != null) {
+			String parentPkType = this.getDataBaseType(foreignTable.pk_field.getGenericType());
+			sql += " , " + foreignTable.getAsForeignKey() + " " + parentPkType + " , ";
+			sql += " CONSTRAINT " + td.table.name() + foreignTable.table.name();
+			sql += " FOREIGN KEY (" + foreignTable.getAsForeignKey() + ") REFERENCES " + foreignTable.table.name()
+					+ " (" + foreignTable.pk.name() + ")";
+			sql += " ON DELETE CASCADE ON UPDATE RESTRICT";
 		}
 		if (td.parentTable != null && td.parentTable.pk_field != null) {
 			String parentPkType = this.getDataBaseType(td.parentTable.pk_field.getGenericType());
@@ -88,9 +93,10 @@ public class MariaDBConnector extends DBConnector {
 		batch.add(sql);
 		;
 		if (td.parentTable != null) {
-			batch.addAll(this.generateCreateTableQuery(td.parentTable));
+			batch.addAll(this.generateCreateTableQuery(td.parentTable, null));
 		}
-
+		for (TableData assocTable : td.associatedTables)
+			batch.addAll(this.generateCreateTableQuery(assocTable, td));
 		return batch;
 	}
 
@@ -171,7 +177,8 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateUpdateQuery(Criteria c, Object o) throws IllegalArgumentException, IllegalAccessException {
+	public List<String> generateUpdateQuery(Criteria c, Object o)
+			throws IllegalArgumentException, IllegalAccessException {
 		TableData current = ClassMapper.getInstance().getTableData(o.getClass());
 		String sql = "UPDATE ";
 		String sqlSet = " SET ";
@@ -210,7 +217,7 @@ public class MariaDBConnector extends DBConnector {
 		sql += sqlSet;
 		if (this.show_querries)
 			System.out.println(sql);
-		List<String> ret =new LinkedList<String>();
+		List<String> ret = new LinkedList<String>();
 		ret.add(sql);
 		return ret;
 	}
@@ -239,18 +246,18 @@ public class MariaDBConnector extends DBConnector {
 			System.out.println(sql);
 		return sql;
 	}
-	
+
 	@Override
 	public String getDataBaseType(Type type) {
-		if(type.equals(int.class)||type.equals(Integer.class))
+		if (type.equals(int.class) || type.equals(Integer.class))
 			return "INTEGER";
-		if(type.equals(float.class)||type.equals(Float.class))
+		if (type.equals(float.class) || type.equals(Float.class))
 			return "FLOAT";
-		if(type.equals(double.class)||type.equals(Double.class))
+		if (type.equals(double.class) || type.equals(Double.class))
 			return "DOUBLE";
-		if(type.equals(String.class))
+		if (type.equals(String.class))
 			return "VARCHAR(255)";
-		if(type.equals(char.class))
+		if (type.equals(char.class))
 			return "VARCHAR(1)";
 		return null;
 	}
