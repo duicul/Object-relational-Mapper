@@ -3,12 +3,15 @@ package testQuery;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.mockito.Mockito;
 
 import criteria.Criteria;
 import database.DBConnector;
@@ -23,14 +26,24 @@ import testClasses.WhiteSUV;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class MariaDBtestQuery {
-	private DBConnector dbc;
-	private ORMLoader ol;
+	private DBConnector dbc,mocked_dbc;
+	private ORMLoader ol,mocked_ol;
 	private Criteria c;
+	private Connection mocked_con;
 
 	@BeforeAll
 	public void setup() {
 		this.dbc = new MariaDBConnector(3306, "localhost", "root", "", "test_orm", true);
 		this.ol = new ORMLoader(dbc);
+		this.mocked_dbc = Mockito.mock(MariaDBConnector.class);
+		this.mocked_con = Mockito.mock(Connection.class);
+		this.mocked_ol = new ORMLoader(mocked_dbc);
+		try {
+			Mockito.when(mocked_dbc.getConnection()).thenReturn(this.mocked_con);
+		} catch (ClassNotFoundException | SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Test
@@ -314,5 +327,11 @@ public class MariaDBtestQuery {
 			e.printStackTrace();
 			fail();
 		}
+	}
+	
+	@Test
+	public void testMockCreate() {
+		
+		this.mocked_ol.createTable(Nota.class);
 	}
 }
