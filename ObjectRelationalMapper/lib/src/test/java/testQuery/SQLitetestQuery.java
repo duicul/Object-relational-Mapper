@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -20,8 +21,10 @@ import loader.ClassMapper;
 import loader.ORMLoader;
 import loader.TableData;
 import testClasses.Car;
+import testClasses.Door;
 import testClasses.Nota;
 import testClasses.SUV;
+import testClasses.Traction;
 import testClasses.WhiteSUV;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -88,8 +91,8 @@ public class SQLitetestQuery {
 	@Test
 	public void testCreateQuery() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new Nota(4), Nota.class);
-
+			List<String> query = this.dbc.generateCreateQuery(new Nota(4), Nota.class,null);
+			assertEquals(query.size(),1);
 			assertEquals(query.get(0), "INSERT INTO Nota (Value) VALUES  (4.0)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -101,10 +104,32 @@ public class SQLitetestQuery {
 	@Test
 	public void testCreateQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120, null, null),
-					SUV.class);
-
-			assertEquals(query.get(0), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , PARENT_FOREIGN_KEY)");
+			List<Door> doors = new LinkedList<Door>();
+			doors.add(new Door(13,14));
+			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120, doors, new Traction(7)),
+					SUV.class,null);
+			assertEquals(query.size(),2);
+			assertEquals(query.get(0), "INSERT INTO Traction (Ratio , SUVsid) VALUES  (7.0 , FOREIGN_KEY)");
+			assertEquals(query.get(1), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , PARENT_FOREIGN_KEY)");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	@Test
+	public void testCreateQueryAssociationOtm() {
+		try {
+			List<Door> doors = new LinkedList<Door>();
+			doors.add(new Door(13,14));
+			doors.add(new Door(15,16));
+			List<String> query = this.dbc.generateCreateQuery(new Car("BMW", "alb", "MH69KOL", 4, doors),
+					Car.class,null);
+			assertEquals(query.size(),3);
+			assertEquals(query.get(0), "INSERT INTO Door (Length,Width , Carcid) VALUES  (13,14 , FOREIGN_KEY)");
+			assertEquals(query.get(1), "INSERT INTO Door (Length,Width , Carcid) VALUES  (15,16 , FOREIGN_KEY)");
+			assertEquals(query.get(2), "INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -116,8 +141,8 @@ public class SQLitetestQuery {
 	public void testCreateQuery3Hierarchy() {
 		try {
 			List<String> query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120, null, null),
-					WhiteSUV.class);
-
+					WhiteSUV.class,null);
+			assertEquals(query.size(),1);
 			assertEquals(query.get(0), "INSERT INTO WhiteSUV (SUVsid) VALUES  (PARENT_FOREIGN_KEY)");
 
 		} catch (Exception e) {

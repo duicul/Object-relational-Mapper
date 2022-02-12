@@ -2,6 +2,7 @@ package ObjectRelationalMapper;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 
 import criteria.Criteria;
@@ -11,7 +12,9 @@ import database.SQLiteDBConenctor;
 import exception.WrongColumnName;
 import loader.ORMLoader;
 import testClasses.Car;
+import testClasses.Door;
 import testClasses.Nota;
+import testClasses.Traction;
 import testClasses.WhiteSUV;
 
 public class MainTestSQLITE {
@@ -20,6 +23,11 @@ public class MainTestSQLITE {
 		Path p = Paths.get(currentPath).getParent();
 		System.out.println(currentPath);
 		System.out.println(p);
+		
+		Traction trac = new Traction(7);
+		List<Door> doors = new LinkedList<Door>();
+		doors.add(new Door(3,4));
+		doors.add(new Door(5,6));
 		DBConnector dbc = new SQLiteDBConenctor(p + "\\test_db.db", true);
 		ORMLoader ol = new ORMLoader(dbc);
 		ol.createTable(Nota.class);
@@ -53,7 +61,7 @@ public class MainTestSQLITE {
 			System.out.println(ol.getJSON(cr));
 		}
 		ol.delete(ccar);
-		ol.insert(new Car("BMW", "roz", "MH89GOG", 12, null));
+		ol.insert(new Car("BMW", "roz", "MH89GOG", 12, doors));
 		objCar = ol.get(ccar);
 		for (Object car : objCar) {
 			Car cr = (Car) car;
@@ -79,7 +87,7 @@ public class MainTestSQLITE {
 		}
 
 		ol.createTable(WhiteSUV.class);
-		ol.insert(new WhiteSUV("BMW", "MH69KOL", 4, 120, null, null));
+		ol.insert(new WhiteSUV("BMW", "MH69KOL", 4, 120, doors, trac));
 
 		Criteria wS = ol.createCriteria(WhiteSUV.class);
 		try {

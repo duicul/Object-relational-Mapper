@@ -14,6 +14,7 @@ import java.util.List;
 
 import loader.ClassMapper;
 import loader.ColumnData;
+import loader.ForeignTable;
 import loader.TableData;
 
 public abstract class DBConnector {
@@ -72,7 +73,7 @@ public abstract class DBConnector {
 		try {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
-			List<String> sql = this.generateCreateQuery(o, o.getClass());
+			List<String> sql = this.generateCreateQuery(o, o.getClass(), null);
 			for (int i = sql.size() - 1; i >= 0; i--)
 				stmt.addBatch(sql.get(i));
 			stmt.executeBatch();
@@ -106,9 +107,9 @@ public abstract class DBConnector {
 
 			while (rs.next()) {
 				ret = cons.newInstance();
-				for (int i = 1; i <= no_col; i++) {
-					String col_name = rsmd.getColumnName(i);
-					for (TableData curTable = current; curTable != null; curTable = curTable.parentTable) {
+				for (TableData curTable = current; curTable != null; curTable = curTable.parentTable) {
+					for (int i = 1; i <= no_col; i++) {
+						String col_name = rsmd.getColumnName(i);
 
 						if (curTable.pk != null && curTable.pk.autoincrement()
 								&& curTable.pk.name().contentEquals(col_name)) {
@@ -131,7 +132,21 @@ public abstract class DBConnector {
 							}
 						}
 					}
+
+					for (TableData foreignTab : curTable.associatedTables.keySet()) {
+						Criteria clonedCrit = c.adaptForTable(foreignTab);
+						clonedCrit.addForeignTableCriteria(curTable, ret);
+						List<Object> foreignObj = this.read(clonedCrit);
+						ForeignTable ft = curTable.associatedTables.get(foreignTab);
+						if (ft != null && ft.oto != null) {
+							if (foreignObj.size() == 1)
+								ft.f.set(ret, foreignObj.get(0));
+						} else if (ft != null && ft.otm != null) {
+							ft.f.set(ret, foreignObj);
+						}
+					}
 				}
+
 				lo.add(ret);
 			}
 		} catch (Exception e) {
@@ -207,7 +222,7 @@ public abstract class DBConnector {
 
 	public abstract List<String> generateDeleteTableQuery(TableData td);
 
-	public abstract List<String> generateCreateQuery(Object o, Class<?> subClass)
+	public abstract List<String> generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
 			throws IllegalArgumentException, IllegalAccessException;
 
 	public abstract String generateReadQuery(Criteria c) throws ClassNotFoundException, SQLException;

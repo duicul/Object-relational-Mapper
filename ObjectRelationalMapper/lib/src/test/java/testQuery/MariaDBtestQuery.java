@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -20,8 +21,10 @@ import loader.ClassMapper;
 import loader.ORMLoader;
 import loader.TableData;
 import testClasses.Car;
+import testClasses.Door;
 import testClasses.Nota;
 import testClasses.SUV;
+import testClasses.Traction;
 import testClasses.WhiteSUV;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -96,7 +99,7 @@ public class MariaDBtestQuery {
 	@Test
 	public void testCreateQuery() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new Nota(4), Nota.class);
+			List<String> query = this.dbc.generateCreateQuery(new Nota(4), Nota.class, null);
 			assertEquals(query.size(), 1);
 			assertEquals(query.get(0), "INSERT INTO Nota (Value) VALUES  (4.0)");
 		} catch (Exception e) {
@@ -109,11 +112,15 @@ public class MariaDBtestQuery {
 	@Test
 	public void testCreateQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120, null, null),
-					SUV.class);
-			assertEquals(query.size(), 2);
-			assertEquals(query.get(0), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
-			assertEquals(query.get(1),
+			List<Door> doors = new LinkedList<Door>();
+			doors.add(new Door(13, 14));
+			List<String> query = this.dbc.generateCreateQuery(
+					new SUV("BMW", "alb", "MH69KOL", 4, 120, doors, new Traction(7)), SUV.class, null);
+			assertEquals(query.size(), 4);
+			assertEquals(query.get(0), "INSERT INTO Traction (Ratio , SUVsid) VALUES  (7.0 , LAST_INSERT_ID())");
+			assertEquals(query.get(1), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
+			assertEquals(query.get(2), "INSERT INTO Door (Length,Width , Carcid) VALUES  (13,14 , LAST_INSERT_ID())");
+			assertEquals(query.get(3),
 					"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -125,14 +132,17 @@ public class MariaDBtestQuery {
 	@Test
 	public void testCreateQuery3Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120, null, null),
-					WhiteSUV.class);
-			assertEquals(query.size(), 3);
+			List<Door> doors = new LinkedList<Door>();
+			doors.add(new Door(13, 14));
+			List<String> query = this.dbc.generateCreateQuery(
+					new WhiteSUV("BMW", "MH69KOL", 4, 120, doors, new Traction(3)), WhiteSUV.class, null);
+			assertEquals(query.size(), 5);
 			assertEquals(query.get(0), "INSERT INTO WhiteSUV (SUVsid) VALUES  (LAST_INSERT_ID())");
-			assertEquals(query.get(1), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
-			assertEquals(query.get(2),
+			assertEquals(query.get(1), "INSERT INTO Traction (Ratio , SUVsid) VALUES  (3.0 , LAST_INSERT_ID())");
+			assertEquals(query.get(2), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
+			assertEquals(query.get(3), "INSERT INTO Door (Length,Width , Carcid) VALUES  (13,14 , LAST_INSERT_ID())");
+			assertEquals(query.get(4),
 					"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','white','MH69KOL',4)");
-
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

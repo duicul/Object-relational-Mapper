@@ -54,7 +54,7 @@ public class AssociationTest {
 		Car c = new Car("Audi", "Pink", "BV45GOG", 9, doors);
 		TableData car = ClassMapper.getInstance().getTableData(Car.class);
 		assertEquals(car.class_name, Car.class);
-		for (TableData foreignTables : car.associatedTables)
+		for (TableData foreignTables : car.associatedTables.keySet())
 			assertEquals(foreignTables.class_name, Door.class);
 	}
 	
@@ -67,10 +67,10 @@ public class AssociationTest {
 		SUV c = new SUV("Audi", "Pink", "BV45GOG", 9,120, doors,t);
 		TableData suv = ClassMapper.getInstance().getTableData(SUV.class);
 		assertEquals(suv.class_name, SUV.class);
-		for (TableData foreignTables : suv.associatedTables)
+		for (TableData foreignTables : suv.associatedTables.keySet())
 			assertEquals(foreignTables.class_name, Traction.class);
 		assertEquals(suv.parentTable.class_name, Car.class);
-		for (TableData foreignTables : suv.parentTable.associatedTables)
+		for (TableData foreignTables : suv.parentTable.associatedTables.keySet())
 			assertEquals(foreignTables.class_name, Door.class);
 	}
 

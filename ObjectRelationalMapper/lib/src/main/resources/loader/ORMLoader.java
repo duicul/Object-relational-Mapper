@@ -2,6 +2,7 @@ package loader;
 
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,22 @@ public class ORMLoader {
 	}
 
 	public String getJSON(Object o) {
+		Map<String, String> elements = this.getJSONMap(o);
+		ObjectMapper objectMapper = new ObjectMapper();
+		if (o == null)
+			return "{null}";
+		try {
+			String json = objectMapper.writeValueAsString(elements);
+			return json;
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return "{}";
+	}
+
+	public Map<String, String> getJSONMap(Object o) {
+		if (o == null)
+			return null;
 		TableData td = ClassMapper.getInstance().getTableData(o.getClass());
 		Map<String, String> elements = new HashMap<String, String>();
 		for (TableData current = td; current != null; current = current.parentTable) {
@@ -50,17 +67,35 @@ public class ORMLoader {
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
 			}
-		}
-		ObjectMapper objectMapper = new ObjectMapper();
 
-        try {
-            String json = objectMapper.writeValueAsString(elements);
-            return json;
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-		return "{}";
-		
+			for (TableData assocTab : current.associatedTables.keySet()) {
+				ColumnData colDat = current.associatedTables.get(assocTab);
+				if (colDat.oto != null) {
+					Object objoto;
+					try {
+						objoto = current.associatedTables.get(assocTab).f.get(o);
+						elements.put(assocTab.getAsForeignKey(), this.getJSON(objoto));
+					} catch (IllegalArgumentException | IllegalAccessException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} else if (colDat.otm != null) {
+					Object objotm;
+					try {
+						objotm = current.associatedTables.get(assocTab).f.get(o);
+						List<String> objsJSON = new LinkedList<String>();
+						for (Object objind : (List<Object>) objotm)
+							objsJSON.add(this.getJSON(objind));
+						elements.put(assocTab.getAsForeignKey(), objsJSON.toString());
+					} catch (IllegalArgumentException | IllegalAccessException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				}
+			}
+		}
+		return elements;
 	}
 
 	public Criteria createCriteria(Class<?> tableClass) {
@@ -101,7 +136,7 @@ public class ORMLoader {
 	public boolean update(Object o) {
 		Criteria c = this.createCriteria(o.getClass());
 		try {
-			for(TableData td = c.td;td!=null;td=td.parentTable) {
+			for (TableData td = c.td; td != null; td = td.parentTable) {
 				c.eq(td.pk.name(), td.pk_field.get(o));
 			}
 		} catch (IllegalArgumentException | IllegalAccessException | WrongColumnName e) {

@@ -46,7 +46,7 @@ public class ClassMapper {
 		List<ColumnData> lcd = new ArrayList<ColumnData>();
 		PK pk = null;
 		Field pk_field = null;
-		List<TableData> foreignTables = new LinkedList<TableData>();
+		Map<TableData,ForeignTable> foreignTables = new HashMap<TableData,ForeignTable>();
 		for (Field f : tableClass.getDeclaredFields()) {
 			Column c = null;
 			OneToMany otm = null;
@@ -62,13 +62,13 @@ public class ClassMapper {
 					if (list_oneto instanceof ParameterizedType) {
 						ParameterizedType paramtype = (ParameterizedType) list_oneto;
 						if (((ParameterizedType) list_oneto).getActualTypeArguments().length > 0)
-							foreignTables.add(this.extractTableData((Class<?>) paramtype.getActualTypeArguments()[0]));
+							foreignTables.put(this.extractTableData((Class<?>) paramtype.getActualTypeArguments()[0]),new ForeignTable(c, otm, oto, f,(Class<?>) paramtype.getActualTypeArguments()[0]));
 					}
 					continue;
 				}
 				if (a instanceof OneToOne) {
 					oto = (OneToOne) a;
-					foreignTables.add(this.extractTableData((Class<?>) f.getGenericType()));
+					foreignTables.put(this.extractTableData((Class<?>) f.getGenericType()),new ForeignTable(c, otm, oto, f,(Class<?>) f.getGenericType()));
 					continue;
 				}
 				if (a instanceof PK) {

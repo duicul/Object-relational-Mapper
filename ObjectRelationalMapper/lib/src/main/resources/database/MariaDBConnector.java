@@ -15,6 +15,7 @@ import criteria.Criteria;
 import criteria.MariaDBCriteria;
 import loader.ClassMapper;
 import loader.ColumnData;
+import loader.ForeignTable;
 import loader.TableData;
 
 public class MariaDBConnector extends DBConnector {
@@ -22,6 +23,7 @@ public class MariaDBConnector extends DBConnector {
 	private long port;
 	private String hostname, username, password, database, driver;
 	private boolean show_querries;
+	public static final String FOREIGN_KEY = "FOREIGN_KEY";
 
 	public MariaDBConnector(long port, String hostname, String username, String password, String database,
 			boolean show_querries) {
@@ -95,8 +97,8 @@ public class MariaDBConnector extends DBConnector {
 		if (td.parentTable != null) {
 			batch.addAll(this.generateCreateTableQuery(td.parentTable, null));
 		}
-		for (TableData assocTable : td.associatedTables)
-			batch.addAll(this.generateCreateTableQuery(assocTable, td));
+		for (TableData assocTable : td.associatedTables.keySet()) {
+			batch.addAll(this.generateCreateTableQuery(assocTable, td));}
 		return batch;
 	}
 
@@ -114,7 +116,7 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateCreateQuery(Object o, Class<?> subClass)
+	public List<String> generateCreateQuery(Object o, Class<?> subClass,Class<?> foreignTable)
 			throws IllegalArgumentException, IllegalAccessException {
 		List<String> query = new LinkedList<String>();
 		TableData current = ClassMapper.getInstance().getTableData(subClass);
@@ -146,15 +148,34 @@ public class MariaDBConnector extends DBConnector {
 			val += "LAST_INSERT_ID()";
 			decl += current.parentTableFK;
 		}
+		
+		if (foreignTable != null) {
+			if (current.lcd.size() > 0) {
+				val += " , ";
+				decl += " , ";
+			}
+			TableData foreign = ClassMapper.getInstance().getTableData(foreignTable);
+			val += "LAST_INSERT_ID()";
+			decl += foreign.getAsForeignKey();
+		}
 
 		decl += ")";
 		val += ")";
 		sql += decl + " VALUES " + val;
+		
+		for (TableData forTab : current.associatedTables.keySet()) {
+			ForeignTable assocTable = current.associatedTables.get(forTab);
+			for (Object foreignObj : assocTable.getObjectsFromParent(o)) {
+				if (foreignObj != null)
+					query.addAll(this.generateCreateQuery(foreignObj, foreignObj.getClass(), current.class_name));
+			}
+		}
 		query.add(sql);
+		
 		if (this.show_querries)
 			System.out.println(sql);
 		if (current.parentTable != null) {
-			query.addAll(this.generateCreateQuery(o, current.parentTable.class_name));
+			query.addAll(this.generateCreateQuery(o, current.parentTable.class_name,null));
 		}
 		return query;
 	}
