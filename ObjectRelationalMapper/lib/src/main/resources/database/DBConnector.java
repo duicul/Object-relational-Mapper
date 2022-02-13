@@ -18,6 +18,7 @@ import java.util.List;
 import loader.ClassMapper;
 import loader.ColumnData;
 import loader.ForeignTable;
+import loader.ORMLoader;
 import loader.TableData;
 
 public abstract class DBConnector {
@@ -275,16 +276,61 @@ public abstract class DBConnector {
 	 * @return
 	 */
 	public boolean delete(Criteria c) {
+
+		List<Object> objs;
 		try {
-			Connection con = this.getConnection();
-			Statement stmt = con.createStatement();
-			String sql = this.generateDeleteQuery(c);
-			stmt.executeUpdate(sql);
-		} catch (SQLException | ClassNotFoundException e) {
+			objs = this.read(c);
+			for (Object ob : objs) {
+				this.delete(ob);
+			}
+		} catch (ClassNotFoundException | SQLException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return false;
+		}
+
+		return true;
+	}
+
+	protected boolean delete(Object o) {
+		Connection con;
+		try {
+			con = this.getConnection();
+
+			Statement stmt = con.createStatement();
+
+			TableData td = ClassMapper.getInstance().getTableData(o.getClass());
+			ORMLoader ol = new ORMLoader(this);
+			Criteria mainCrit = ol.createCriteria(o.getClass());
+			for (TableData parent = td.parentTable,
+					child = td; child != null; child = parent, parent = parent == null ? null : parent.parentTable) {
+				mainCrit.eq(child.pk.name(), child.pk_field.get(o));
+
+				for (TableData assoctd : child.associatedTables.keySet()) {
+					Object foreObj = child.associatedTables.get(assoctd).f.get(o);
+					Criteria asssocCrit = ol.createCriteria(foreObj.getClass());
+					asssocCrit.equals(foreObj);
+					if (foreObj != null) {
+						if (child.associatedTables.get(assoctd).oto != null)
+							this.delete(foreObj);
+						else if (child.associatedTables.get(assoctd).otm != null) {
+							List<Object> lotm = (List<Object>) foreObj;
+							for (Object ob : lotm) {
+								this.delete(ob);
+							}
+						}
+					}
+
+				}
+			}
+			String sql = this.generateDeleteQuery(mainCrit);
+			System.out.println(sql);
+			stmt.executeUpdate(sql);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return true;
+
 	}
 
 	public abstract List<String> generateCreateTableQuery(TableData td, TableData foreignTable);
