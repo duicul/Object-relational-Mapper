@@ -99,9 +99,9 @@ public class MariaDBtestQuery {
 	@Test
 	public void testCreateQuery() {
 		try {
-			List<String> query = this.dbc.generateCreateQuery(new Nota(4), Nota.class, null);
-			assertEquals(query.size(), 1);
-			assertEquals(query.get(0), "INSERT INTO Nota (Value) VALUES  (4.0)");
+			String query = this.dbc.generateCreateQuery(new Nota(4), Nota.class, null);
+			// assertEquals(query.size(), 1);
+			assertEquals(query, "INSERT INTO Nota (Value) VALUES  (4.0)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -114,14 +114,17 @@ public class MariaDBtestQuery {
 		try {
 			List<Door> doors = new LinkedList<Door>();
 			doors.add(new Door(13, 14));
-			List<String> query = this.dbc.generateCreateQuery(
+			String query = this.dbc.generateCreateQuery(
 					new SUV("BMW", "alb", "MH69KOL", 4, 120, doors, new Traction(7)), SUV.class, null);
-			assertEquals(query.size(), 4);
-			assertEquals(query.get(0), "INSERT INTO Traction (Ratio , SUVsid) VALUES  (7.0 , LAST_INSERT_ID())");
-			assertEquals(query.get(1), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
-			assertEquals(query.get(2), "INSERT INTO Door (Length,Width , Carcid) VALUES  (13,14 , LAST_INSERT_ID())");
-			assertEquals(query.get(3),
-					"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
+			// assertEquals(query.size(), 4);
+			assertEquals(query, "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , PARENT_KEY)");
+			// assertEquals(query.get(1), "INSERT INTO SUV (HorsePower , Carcid) VALUES (120
+			// , LAST_INSERT_ID())");
+			// assertEquals(query.get(2), "INSERT INTO Door (Length,Width , Carcid) VALUES
+			// (13,14 , LAST_INSERT_ID())");
+			// assertEquals(query.get(3),
+			// "INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES
+			// ('BMW','alb','MH69KOL',4)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -134,15 +137,22 @@ public class MariaDBtestQuery {
 		try {
 			List<Door> doors = new LinkedList<Door>();
 			doors.add(new Door(13, 14));
-			List<String> query = this.dbc.generateCreateQuery(
-					new WhiteSUV("BMW", "MH69KOL", 4, 120, doors, new Traction(3)), WhiteSUV.class, null);
-			assertEquals(query.size(), 5);
-			assertEquals(query.get(0), "INSERT INTO WhiteSUV (SUVsid) VALUES  (LAST_INSERT_ID())");
-			assertEquals(query.get(1), "INSERT INTO Traction (Ratio , SUVsid) VALUES  (3.0 , LAST_INSERT_ID())");
-			assertEquals(query.get(2), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
-			assertEquals(query.get(3), "INSERT INTO Door (Length,Width , Carcid) VALUES  (13,14 , LAST_INSERT_ID())");
-			assertEquals(query.get(4),
-					"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','white','MH69KOL',4)");
+			String query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120, doors, new Traction(3)),
+					WhiteSUV.class, null);
+			assertEquals(query, "INSERT INTO WhiteSUV (SUVsid) VALUES  (PARENT_KEY)");
+			/*
+			 * assertEquals(query.get(0),
+			 * "INSERT INTO WhiteSUV (SUVsid) VALUES  (LAST_INSERT_ID())");
+			 * assertEquals(query.get(1),
+			 * "INSERT INTO Traction (Ratio , SUVsid) VALUES  (3.0 , LAST_INSERT_ID())");
+			 * assertEquals(query.get(2),
+			 * "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , LAST_INSERT_ID())");
+			 * assertEquals(query.get(3),
+			 * "INSERT INTO Door (Length,Width , Carcid) VALUES  (13,14 , LAST_INSERT_ID())"
+			 * ); assertEquals(query.get(4),
+			 * "INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','white','MH69KOL',4)"
+			 * );
+			 */
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -302,7 +312,7 @@ public class MariaDBtestQuery {
 					null);
 			assertEquals(query.size(), 1);
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS Nota(Value FLOAT , nid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( nid ) );");
+					"CREATE TABLE IF NOT EXISTS Nota(Value FLOAT , nid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( nid ) );");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -317,9 +327,9 @@ public class MariaDBtestQuery {
 					null);
 			assertEquals(query.size(), 2);
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),
-					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( cid ) );");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -334,13 +344,13 @@ public class MariaDBtestQuery {
 					null);
 			assertEquals(query.size(), 4);
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),
-					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(2),
-					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(3),
-					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( cid ) );");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -355,15 +365,15 @@ public class MariaDBtestQuery {
 					.generateCreateTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class), null);
 			assertEquals(query.size(), 5);
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( wsid )  , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( wsid )  , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),
-					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(2),
-					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(3),
-					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(4),
-					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT  NOT NULL ,  PRIMARY KEY ( cid ) );");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

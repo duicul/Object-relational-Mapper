@@ -15,6 +15,7 @@ import criteria.Criteria;
 import criteria.MariaDBCriteria;
 import criteria.SQLiteCriteria;
 import exception.ForeignKeyReplacementError;
+import exception.WrongColumnName;
 import loader.ClassMapper;
 import loader.ColumnData;
 import loader.ForeignTable;
@@ -24,7 +25,7 @@ public class SQLiteDBConenctor extends DBConnector {
 	private String dbPath, driver;
 	private boolean show_querries;
 
-	public static final String PARENT_FOREIGN_KEY = "PARENT_FOREIGN_KEY";
+	public static final String PARENT_FOREIGN_KEY = "PARENT_KEY";
 	public static final String FOREIGN_KEY = "FOREIGN_KEY";
 
 	public SQLiteDBConenctor(String dbPath, boolean show_querries) {
@@ -49,15 +50,16 @@ public class SQLiteDBConenctor extends DBConnector {
 			 */
 		}
 		if (td.pk != null) {
-			sql += td.pk.name() + " " + td.pk.type() + " PRIMARY KEY " + (td.pk.autoincrement() ? "AUTOINCREMENT" : "");
+			sql += td.pk.name() + " " + td.pk.type() + " PRIMARY KEY "
+					+ (td.pk.autoincrement() ? "AUTOINCREMENT" : "" + " NOT NULL ");
 		}
 		String constraints = "";
 		if (foreignTable != null) {
 			String parentPkType = this.getDataBaseType(foreignTable.pk_field.getGenericType());
-			sql += " , " + foreignTable.getAsForeignKey() + " " + parentPkType ;
+			sql += " , " + foreignTable.getAsForeignKey() + " " + parentPkType;
 			constraints += " , CONSTRAINT " + td.table.name() + foreignTable.table.name();
-			constraints += " FOREIGN KEY (" + foreignTable.getAsForeignKey() + ") REFERENCES " + foreignTable.table.name()
-					+ " (" + foreignTable.pk.name() + ")";
+			constraints += " FOREIGN KEY (" + foreignTable.getAsForeignKey() + ") REFERENCES "
+					+ foreignTable.table.name() + " (" + foreignTable.pk.name() + ")";
 			constraints += " ON DELETE CASCADE ON UPDATE CASCADE";
 		}
 		if (td.parentTable != null && td.parentTable.pk_field != null) {
@@ -66,12 +68,12 @@ public class SQLiteDBConenctor extends DBConnector {
 				if (td.parentTable.pk != null) {
 					sql += " , " + td.parentTableFK + " " + parentPkType;
 					constraints += " , CONSTRAINT " + td.table.name() + td.parentTable.table.name();
-					constraints += " FOREIGN KEY (" + td.parentTableFK + ") REFERENCES " + td.parentTable.table.name() + " ("
-							+ td.parentTable.pk.name() + ")";
+					constraints += " FOREIGN KEY (" + td.parentTableFK + ") REFERENCES " + td.parentTable.table.name()
+							+ " (" + td.parentTable.pk.name() + ")";
 					constraints += " ON DELETE CASCADE ON UPDATE CASCADE";
 				}
 		}
-		sql+=constraints;
+		sql += constraints;
 		sql += ");";
 		if (this.show_querries)
 			System.out.println(sql);
@@ -99,9 +101,9 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
+	public String generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
 			throws IllegalArgumentException, IllegalAccessException {
-		List<String> query = new LinkedList<String>();
+		//List<String> query = new LinkedList<String>();
 		TableData current = ClassMapper.getInstance().getTableData(subClass);
 		String sql = "INSERT INTO " + current.table.name();
 		String decl = "", val = "";
@@ -116,11 +118,13 @@ public class SQLiteDBConenctor extends DBConnector {
 		}
 
 		for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
-			if (current.lcd.get(colInd).f.get(o) instanceof String)
-				val += ",'" + current.lcd.get(colInd).f.get(o) + "'";
-			else
-				val += "," + current.lcd.get(colInd).f.get(o);
-			decl += "," + current.lcd.get(colInd).col.name();
+			if (current.lcd.get(colInd).col != null) {
+				if (current.lcd.get(colInd).f.get(o) instanceof String)
+					val += ",'" + current.lcd.get(colInd).f.get(o) + "'";
+				else
+					val += "," + current.lcd.get(colInd).f.get(o);
+				decl += "," + current.lcd.get(colInd).col.name();
+			}
 		}
 
 		if (current.parentTable != null) {
@@ -133,7 +137,7 @@ public class SQLiteDBConenctor extends DBConnector {
 		}
 
 		if (foreignTable != null) {
-			if (current.lcd.size() > 0) {
+			if (current.lcd.size() > 0 || current.parentTable != null) {
 				val += " , ";
 				decl += " , ";
 			}
@@ -145,21 +149,24 @@ public class SQLiteDBConenctor extends DBConnector {
 		decl += ")";
 		val += ")";
 		sql += decl + " VALUES " + val;
-		for (TableData forTab : current.associatedTables.keySet()) {
+		/*for (TableData forTab : current.associatedTables.keySet()) {
 			ForeignTable assocTable = current.associatedTables.get(forTab);
 			for (Object foreignObj : assocTable.getObjectsFromParent(o)) {
 				if (foreignObj != null)
 					query.addAll(this.generateCreateQuery(foreignObj, foreignObj.getClass(), current.class_name));
 			}
 		}
-		query.add(sql);
+		if (current.parentTable != null) {
+			query.addAll(this.generateCreateQuery(current.parentTable.class_name.cast(o),current.parentTable.class_name, current.parentTable.class_name));
+		}*/
+		//query.add(sql);
 		if (this.show_querries)
 			System.out.println(sql);
 		/*
 		 * if (current.parentTable != null) { query.addAll(this.generateCreateQuery(o,
 		 * current.parentTable.class_name)); }
 		 */
-		return query;
+		return sql;
 	}
 
 	@Override
@@ -220,6 +227,8 @@ public class SQLiteDBConenctor extends DBConnector {
 		String tablejoin = " ";
 		String deleteSql = " DELETE ";
 		List<String> tables = new LinkedList<>();
+		List<String> batch = new LinkedList<String>();
+		List<String> assoc = new LinkedList<String>();
 		for (TableData parent = current.parentTable,
 				child = current; parent != null; child = parent, parent = parent.parentTable) {
 			tables.add(parent.table.name());
@@ -232,6 +241,7 @@ public class SQLiteDBConenctor extends DBConnector {
 		 */
 		sql = deleteSql + sql;
 		sql += tablejoin;
+
 		sql += c.getCriteriaText();
 		if (this.show_querries)
 			System.out.println(sql);
@@ -263,8 +273,8 @@ public class SQLiteDBConenctor extends DBConnector {
 		return null;
 	}
 
-	@Override
-	public boolean create(Object o) {
+	/*@Override
+	public boolean create(Object o,String assocKey) {
 		try {
 			Connection con = this.getConnection();
 			TableData td = ClassMapper.getInstance().getTableData(o.getClass());
@@ -291,6 +301,7 @@ public class SQLiteDBConenctor extends DBConnector {
 				}
 
 				PreparedStatement ps = con.prepareStatement(createsql, keys);
+				System.out.println(createsql);
 				ps.executeUpdate();
 
 				ResultSet rs = ps.getGeneratedKeys();
@@ -307,6 +318,7 @@ public class SQLiteDBConenctor extends DBConnector {
 						} else
 							throw new ForeignKeyReplacementError(createsql);
 					}
+					System.out.println(createsql);
 					stmt.executeUpdate(createsql);
 				}
 
@@ -316,7 +328,7 @@ public class SQLiteDBConenctor extends DBConnector {
 			e.printStackTrace();
 			return false;
 		}
-	}
+	}*/
 
 	@Override
 	public boolean update(Criteria c, Object o) {

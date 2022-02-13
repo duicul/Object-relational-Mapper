@@ -1,14 +1,17 @@
 package database;
 
 import criteria.Criteria;
+import exception.ForeignKeyReplacementError;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,6 +21,8 @@ import loader.ForeignTable;
 import loader.TableData;
 
 public abstract class DBConnector {
+	public static final String PARENT_FOREIGN_KEY = "PARENT_KEY";
+	public static final String FOREIGN_KEY = "FOREIGN_KEY";
 
 	/**
 	 * Create table , from subclass to superclass
@@ -31,8 +36,9 @@ public abstract class DBConnector {
 			Statement stmt = con.createStatement();
 			List<String> sql = this.generateCreateTableQuery(current, null);
 			for (int i = sql.size() - 1; i >= 0; i--) {
-				System.out.println("Execute "+sql.get(i));
-				stmt.addBatch(sql.get(i));}
+				System.out.println("Execute " + sql.get(i));
+				stmt.addBatch(sql.get(i));
+			}
 			stmt.executeBatch();
 			con.close();
 			return true;
@@ -70,19 +76,81 @@ public abstract class DBConnector {
 	 * @param o
 	 * @return
 	 */
-	public boolean create(Object o) {
+	public boolean create(Object o, Class<?> foreignTable, Object assocKey) {
 		try {
 			Connection con = this.getConnection();
-			Statement stmt = con.createStatement();
-			List<String> sql = this.generateCreateQuery(o, o.getClass(), null);
-			for (int i = sql.size() - 1; i >= 0; i--)
-				stmt.addBatch(sql.get(i));
-			stmt.executeBatch();
-			return true;
+			// Statement stmt = con.createStatement();
+
+			TableData td = ClassMapper.getInstance().getTableData(o.getClass());
+			List<TableData> tables = new LinkedList<TableData>();
+			Object generatedKey = null;
+			if (td.parentTable != null) {
+				for (TableData parent = td.parentTable,
+						child = td; child != null; child = parent, parent = parent == null ? null : parent.parentTable)
+					tables.add(child);
+			} else
+				tables.add(td);
+			Collections.reverse(tables);
+			for (TableData current : tables) {
+				// Object parentObj = current.class_name.cast(o);
+				boolean isAssoc = false;
+				if (foreignTable != null) {
+					TableData tdAssoc = ClassMapper.getInstance().getTableData(foreignTable);
+					for (TableData t : tdAssoc.associatedTables.keySet()) {
+						if (t.table.name().equals(current.table.name()))
+							isAssoc = true;
+					}
+				}
+				String sql = "";
+				if (isAssoc)
+					sql = this.generateCreateQuery(o, current.class_name, foreignTable);
+				else
+					sql = this.generateCreateQuery(o, current.class_name, null);
+				String keys[] = { current.pk.name() };
+				if (generatedKey != null) {
+					if (sql.contains(PARENT_FOREIGN_KEY)) {
+						sql = sql.replace(PARENT_FOREIGN_KEY, generatedKey.toString());
+					} else
+						throw new ForeignKeyReplacementError(sql);
+				}
+
+				if (assocKey != null && isAssoc) {
+					if (sql.contains(FOREIGN_KEY)) {
+						sql = sql.replace(FOREIGN_KEY, assocKey.toString());
+					} else
+						throw new ForeignKeyReplacementError(sql);
+				}
+
+				PreparedStatement ps = con.prepareStatement(sql, keys);
+				System.out.println(sql);
+				ps.executeUpdate();
+
+				ResultSet rs = ps.getGeneratedKeys();
+
+				if (rs.next()) {
+					generatedKey = rs.getObject(1);
+				}
+
+				for (TableData assoctd : current.associatedTables.keySet()) {
+					Object foreObj = current.associatedTables.get(assoctd).f.get(o);
+					if (foreObj != null) {
+						if (current.associatedTables.get(assoctd).oto != null)
+							this.create(foreObj, current.class_name, generatedKey);
+						else if (current.associatedTables.get(assoctd).otm != null) {
+							List<Object> lotm = (List<Object>) foreObj;
+							for (Object ob : lotm) {
+								this.create(ob, current.class_name, generatedKey);
+							}
+						}
+					}
+
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
+		return true;
 	}
 
 	/**
@@ -223,7 +291,7 @@ public abstract class DBConnector {
 
 	public abstract List<String> generateDeleteTableQuery(TableData td);
 
-	public abstract List<String> generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
+	public abstract String generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
 			throws IllegalArgumentException, IllegalAccessException;
 
 	public abstract String generateReadQuery(Criteria c) throws ClassNotFoundException, SQLException;

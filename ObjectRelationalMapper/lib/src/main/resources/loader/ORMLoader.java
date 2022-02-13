@@ -111,7 +111,7 @@ public class ORMLoader {
 	}
 
 	public boolean insert(Object o) {
-		return this.dbc.create(o);
+		return this.dbc.create(o,null,null);
 	}
 
 	public boolean delete(Criteria c) {

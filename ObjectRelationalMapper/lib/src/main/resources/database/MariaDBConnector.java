@@ -23,7 +23,7 @@ public class MariaDBConnector extends DBConnector {
 	private long port;
 	private String hostname, username, password, database, driver;
 	private boolean show_querries;
-	public static final String FOREIGN_KEY = "FOREIGN_KEY";
+	
 
 	public MariaDBConnector(long port, String hostname, String username, String password, String database,
 			boolean show_querries) {
@@ -66,7 +66,7 @@ public class MariaDBConnector extends DBConnector {
 			 */
 		}
 		if (td.pk != null) {
-			sql += td.pk.name() + " " + td.pk.type() + " " + (td.pk.autoincrement() ? "AUTO_INCREMENT" : "") + " , ";
+			sql += td.pk.name() + " " + td.pk.type() + " " + (td.pk.autoincrement() ? "AUTO_INCREMENT" : "") + "  NOT NULL , ";
 			sql += " PRIMARY KEY ( " + td.pk.name() + " ) ";
 		}
 		if (foreignTable != null) {
@@ -115,9 +115,9 @@ public class MariaDBConnector extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateCreateQuery(Object o, Class<?> subClass,Class<?> foreignTable)
+	public String generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
 			throws IllegalArgumentException, IllegalAccessException {
-		List<String> query = new LinkedList<String>();
+		//List<String> query = new LinkedList<String>();
 		TableData current = ClassMapper.getInstance().getTableData(subClass);
 		String sql = "INSERT INTO " + current.table.name();
 		String decl = "", val = "";
@@ -132,11 +132,13 @@ public class MariaDBConnector extends DBConnector {
 		}
 
 		for (int colInd = 1; colInd < current.lcd.size(); colInd++) {
-			if (current.lcd.get(colInd).f.get(o) instanceof String)
-				val += ",'" + current.lcd.get(colInd).f.get(o) + "'";
-			else
-				val += "," + current.lcd.get(colInd).f.get(o);
-			decl += "," + current.lcd.get(colInd).col.name();
+			if (current.lcd.get(colInd).col != null) {
+				if (current.lcd.get(colInd).f.get(o) instanceof String)
+					val += ",'" + current.lcd.get(colInd).f.get(o) + "'";
+				else
+					val += "," + current.lcd.get(colInd).f.get(o);
+				decl += "," + current.lcd.get(colInd).col.name();
+			}
 		}
 
 		if (current.parentTable != null) {
@@ -144,39 +146,41 @@ public class MariaDBConnector extends DBConnector {
 				val += " , ";
 				decl += " , ";
 			}
-			val += "LAST_INSERT_ID()";
+			val += PARENT_FOREIGN_KEY;
 			decl += current.parentTableFK;
 		}
-		
+
 		if (foreignTable != null) {
-			if (current.lcd.size() > 0) {
+			if (current.lcd.size() > 0 || current.parentTable != null) {
 				val += " , ";
 				decl += " , ";
 			}
 			TableData foreign = ClassMapper.getInstance().getTableData(foreignTable);
-			val += "LAST_INSERT_ID()";
+			val += FOREIGN_KEY;
 			decl += foreign.getAsForeignKey();
 		}
 
 		decl += ")";
 		val += ")";
 		sql += decl + " VALUES " + val;
-		
-		for (TableData forTab : current.associatedTables.keySet()) {
+		/*for (TableData forTab : current.associatedTables.keySet()) {
 			ForeignTable assocTable = current.associatedTables.get(forTab);
 			for (Object foreignObj : assocTable.getObjectsFromParent(o)) {
 				if (foreignObj != null)
 					query.addAll(this.generateCreateQuery(foreignObj, foreignObj.getClass(), current.class_name));
 			}
 		}
-		query.add(sql);
-		
+		if (current.parentTable != null) {
+			query.addAll(this.generateCreateQuery(current.parentTable.class_name.cast(o),current.parentTable.class_name, current.parentTable.class_name));
+		}*/
+		//query.add(sql);
 		if (this.show_querries)
 			System.out.println(sql);
-		if (current.parentTable != null) {
-			query.addAll(this.generateCreateQuery(o, current.parentTable.class_name,null));
-		}
-		return query;
+		/*
+		 * if (current.parentTable != null) { query.addAll(this.generateCreateQuery(o,
+		 * current.parentTable.class_name)); }
+		 */
+		return sql;
 	}
 
 	@Override

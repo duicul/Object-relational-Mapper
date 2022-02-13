@@ -39,6 +39,19 @@ public class MariaDBCriteria extends Criteria {
 			this.addCriteria(column,tableName + "." + column + " = " + val);
 		}
 	}
+	
+	@Override
+	public void eqConstant(TableData td,String column, Object val) throws WrongColumnName {
+		boolean found =false;
+		for (TableData current = this.td; current != null; current = current.parentTable) {
+			if(current.table.name().equals(td.table.name()))
+				found=true;
+		}
+		if(found)
+			this.addCriteria(column,td.table.name() + "." + column + " = " + val);
+		else
+			throw new WrongColumnName(td, column);
+	}
 
 	@Override
 	public void like(String column, Object val) throws WrongColumnName {

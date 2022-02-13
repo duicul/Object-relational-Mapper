@@ -23,7 +23,7 @@ public abstract class Criteria {
 	public String checkColumnTable(String column) throws WrongColumnName {
 		for (TableData current = this.td; current != null; current = current.parentTable) {
 			for (ColumnData cd : current.lcd) {
-				if (cd.col.name().equals(column))
+				if (cd.col != null && cd.col.name().equals(column))
 					return current.table.name();
 			}
 			if (current.pk.name().equals(column))
@@ -79,14 +79,16 @@ public abstract class Criteria {
 
 	public abstract void eq(String column, Object val) throws WrongColumnName;
 
+	public abstract void eqConstant(TableData td, String column, Object val) throws WrongColumnName;
+
 	public abstract void like(String column, Object val) throws WrongColumnName;
 
 	public void addForeignTableCriteria(TableData adaptTable, Object objval) {
 		String column = adaptTable.getAsForeignKey();
 		try {
 			Object val = adaptTable.pk_field.get(objval);
-			if(val instanceof String)
-				this.addCriteria(column, td.table.name() + "." + column + " = '" + val+"'");
+			if (val instanceof String)
+				this.addCriteria(column, td.table.name() + "." + column + " = '" + val + "'");
 			else
 				this.addCriteria(column, td.table.name() + "." + column + " = " + val);
 		} catch (IllegalArgumentException | IllegalAccessException e) {

@@ -1,5 +1,6 @@
 package ObjectRelationalMapper;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,8 +14,10 @@ import loader.ORMLoader;
 import testClasses.Nota;
 import testClasses.SUV;
 import testClasses.StudentLiterature;
+import testClasses.Traction;
 import testClasses.WhiteSUV;
 import testClasses.Car;
+import testClasses.Door;
 
 public class MainTestMariaDB {
 	private static final Logger logger = LogManager.getLogger(MainTestMariaDB.class);
@@ -23,6 +26,10 @@ public class MainTestMariaDB {
 		logger.error("test");
 		DBConnector dbc = new MariaDBConnector(3306, "localhost", "root", "", "test_orm", true);
 		ORMLoader ol = new ORMLoader(dbc);
+		Traction trac = new Traction(7);
+		List<Door> doors = new LinkedList<Door>();
+		doors.add(new Door(3,4));
+		doors.add(new Door(5,6));
 		/*ol.createTable(Nota.class);
 		Criteria c = ol.createCriteria(Nota.class);
 		try {
@@ -96,6 +103,19 @@ public class MainTestMariaDB {
 		}
 		// ol.dropTable(WhiteSUV.class);*/
 		ol.createTable(StudentLiterature.class);
+		List<WhiteSUV> ws = new LinkedList<WhiteSUV>();
+		ws.add(new WhiteSUV("Audi", "TM78IOP", 12, 90, doors,trac));
+		ws.add(new WhiteSUV("Audi1", "TM78IOP2", 12, 90, doors,trac));
+		StudentLiterature st = new StudentLiterature(ws, 7, "Meth", "Gogu", new Nota(8));
+		ol.insert(st);
+		Criteria cst = ol.createCriteria(StudentLiterature.class);
+		try {
+			cst.like("Name", "%ogu");
+		} catch (WrongColumnName e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ol.delete(cst);
 	}
 
 }
