@@ -30,8 +30,9 @@ public abstract class DBConnector {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
 			List<String> sql = this.generateCreateTableQuery(current, null);
-			for (int i = sql.size() - 1; i >= 0; i--)
-				stmt.addBatch(sql.get(i));
+			for (int i = sql.size() - 1; i >= 0; i--) {
+				System.out.println("Execute "+sql.get(i));
+				stmt.addBatch(sql.get(i));}
 			stmt.executeBatch();
 			con.close();
 			return true;

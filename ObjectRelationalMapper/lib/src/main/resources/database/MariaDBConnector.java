@@ -91,14 +91,13 @@ public class MariaDBConnector extends DBConnector {
 		sql += ");";
 		if (this.show_querries)
 			System.out.println(sql);
-
+		for (TableData assocTable : td.associatedTables.keySet()) {
+			batch.addAll(this.generateCreateTableQuery(assocTable, td));}
 		batch.add(sql);
-		;
 		if (td.parentTable != null) {
 			batch.addAll(this.generateCreateTableQuery(td.parentTable, null));
 		}
-		for (TableData assocTable : td.associatedTables.keySet()) {
-			batch.addAll(this.generateCreateTableQuery(assocTable, td));}
+		
 		return batch;
 	}
 

@@ -12,6 +12,7 @@ import exception.WrongColumnName;
 import loader.ORMLoader;
 import testClasses.Nota;
 import testClasses.SUV;
+import testClasses.StudentLiterature;
 import testClasses.WhiteSUV;
 import testClasses.Car;
 
@@ -22,7 +23,7 @@ public class MainTestMariaDB {
 		logger.error("test");
 		DBConnector dbc = new MariaDBConnector(3306, "localhost", "root", "", "test_orm", true);
 		ORMLoader ol = new ORMLoader(dbc);
-		ol.createTable(Nota.class);
+		/*ol.createTable(Nota.class);
 		Criteria c = ol.createCriteria(Nota.class);
 		try {
 			c.gt("Value", 2);
@@ -93,7 +94,8 @@ public class MainTestMariaDB {
 			ws.hp = 13;
 			ol.update(ws);
 		}
-		// ol.dropTable(WhiteSUV.class);
+		// ol.dropTable(WhiteSUV.class);*/
+		ol.createTable(StudentLiterature.class);
 	}
 
 }

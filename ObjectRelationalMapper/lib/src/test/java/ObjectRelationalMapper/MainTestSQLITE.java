@@ -10,10 +10,13 @@ import database.DBConnector;
 import database.MariaDBConnector;
 import database.SQLiteDBConenctor;
 import exception.WrongColumnName;
+import loader.ClassMapper;
 import loader.ORMLoader;
+import loader.TableData;
 import testClasses.Car;
 import testClasses.Door;
 import testClasses.Nota;
+import testClasses.StudentLiterature;
 import testClasses.Traction;
 import testClasses.WhiteSUV;
 
@@ -24,13 +27,13 @@ public class MainTestSQLITE {
 		System.out.println(currentPath);
 		System.out.println(p);
 		
-		Traction trac = new Traction(7);
+		/*Traction trac = new Traction(7);
 		List<Door> doors = new LinkedList<Door>();
 		doors.add(new Door(3,4));
-		doors.add(new Door(5,6));
+		doors.add(new Door(5,6));*/
 		DBConnector dbc = new SQLiteDBConenctor(p + "\\test_db.db", true);
 		ORMLoader ol = new ORMLoader(dbc);
-		ol.createTable(Nota.class);
+		/*ol.createTable(Nota.class);
 		ol.insert(new Nota(7));
 		ol.createTable(Nota.class);
 		Criteria c = ol.createCriteria(Nota.class);
@@ -104,5 +107,9 @@ public class MainTestSQLITE {
 			ol.update(ws);
 		}
 		// ol.dropTable(WhiteSUV.class);*/
+		//ol.createTable(WhiteSUV.class);
+		ol.createTable(StudentLiterature.class);
+		//TableData td = ClassMapper.getInstance().getTableData(StudentLiterature.class);
+		//System.out.println(td);
 	}
 }

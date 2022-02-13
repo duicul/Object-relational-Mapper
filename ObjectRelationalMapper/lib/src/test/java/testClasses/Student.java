@@ -19,7 +19,7 @@ public class Student extends People {
 		
 	}
 	
-	public Student(List<Car> c,int grade,String name,Nota n) {
+	public Student(List<WhiteSUV> c,int grade,String name,Nota n) {
 		super(c,name);
 		this.grade=grade;
 		this.n=n;

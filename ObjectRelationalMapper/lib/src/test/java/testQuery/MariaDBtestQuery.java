@@ -317,9 +317,9 @@ public class MariaDBtestQuery {
 					null);
 			assertEquals(query.size(), 2);
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
-			assertEquals(query.get(1),
 					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+			assertEquals(query.get(1),
+					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -334,13 +334,13 @@ public class MariaDBtestQuery {
 					null);
 			assertEquals(query.size(), 4);
 			assertEquals(query.get(0),
-					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),
-					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(2),
 					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(3),
-					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -357,13 +357,13 @@ public class MariaDBtestQuery {
 			assertEquals(query.get(0),
 					"CREATE TABLE IF NOT EXISTS WhiteSUV(wsid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( wsid )  , SUVsid INTEGER ,  CONSTRAINT WhiteSUVSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(1),
-					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(2),
-					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
+					"CREATE TABLE IF NOT EXISTS SUV(HorsePower INTEGER , sid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( sid )  , Carcid INTEGER ,  CONSTRAINT SUVCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(3),
 					"CREATE TABLE IF NOT EXISTS Door(Length INTEGER , Width INTEGER , did  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( did )  , Carcid INTEGER ,  CONSTRAINT DoorCar FOREIGN KEY (Carcid) REFERENCES Car (cid) ON DELETE CASCADE ON UPDATE RESTRICT);");
 			assertEquals(query.get(4),
-					"CREATE TABLE IF NOT EXISTS Traction(Ratio FLOAT , tid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( tid )  , SUVsid INTEGER ,  CONSTRAINT TractionSUV FOREIGN KEY (SUVsid) REFERENCES SUV (sid) ON DELETE CASCADE ON UPDATE RESTRICT);");
+					"CREATE TABLE IF NOT EXISTS Car(Model VARCHAR(255) , Color VARCHAR(255) , RegistrationNumber VARCHAR(255) , Age INTEGER , cid  INTEGER  AUTO_INCREMENT ,  PRIMARY KEY ( cid ) );");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

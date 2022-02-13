@@ -13,7 +13,7 @@ public class People {
 	public String name;
 	
 	@OneToMany()
-	public List<Car> c;
+	public List<WhiteSUV> c;
 	
 	@PK(name="pid",autoincrement=true)
 	public int pid;
@@ -22,7 +22,7 @@ public class People {
 		
 	}
 	
-	public People(List<Car> c,String name) {
+	public People(List<WhiteSUV> c,String name) {
 		this.name = name;
 		this.c=c;		
 	}

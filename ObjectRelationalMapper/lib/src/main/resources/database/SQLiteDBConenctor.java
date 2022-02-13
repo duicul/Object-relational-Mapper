@@ -51,35 +51,37 @@ public class SQLiteDBConenctor extends DBConnector {
 		if (td.pk != null) {
 			sql += td.pk.name() + " " + td.pk.type() + " PRIMARY KEY " + (td.pk.autoincrement() ? "AUTOINCREMENT" : "");
 		}
+		String constraints = "";
 		if (foreignTable != null) {
 			String parentPkType = this.getDataBaseType(foreignTable.pk_field.getGenericType());
-			sql += " , " + foreignTable.getAsForeignKey() + " " + parentPkType + " , ";
-			sql += " CONSTRAINT " + td.table.name() + foreignTable.table.name();
-			sql += " FOREIGN KEY (" + foreignTable.getAsForeignKey() + ") REFERENCES " + foreignTable.table.name()
+			sql += " , " + foreignTable.getAsForeignKey() + " " + parentPkType ;
+			constraints += " , CONSTRAINT " + td.table.name() + foreignTable.table.name();
+			constraints += " FOREIGN KEY (" + foreignTable.getAsForeignKey() + ") REFERENCES " + foreignTable.table.name()
 					+ " (" + foreignTable.pk.name() + ")";
-			sql += " ON DELETE CASCADE ON UPDATE CASCADE";
+			constraints += " ON DELETE CASCADE ON UPDATE CASCADE";
 		}
 		if (td.parentTable != null && td.parentTable.pk_field != null) {
 			String parentPkType = this.getDataBaseType(td.parentTable.pk_field.getGenericType());
 			if (parentPkType != null)
 				if (td.parentTable.pk != null) {
-					sql += " , " + td.parentTableFK + " " + parentPkType + " , ";
-					sql += " CONSTRAINT " + td.table.name() + td.parentTable.table.name();
-					sql += " FOREIGN KEY (" + td.parentTableFK + ") REFERENCES " + td.parentTable.table.name() + " ("
+					sql += " , " + td.parentTableFK + " " + parentPkType;
+					constraints += " , CONSTRAINT " + td.table.name() + td.parentTable.table.name();
+					constraints += " FOREIGN KEY (" + td.parentTableFK + ") REFERENCES " + td.parentTable.table.name() + " ("
 							+ td.parentTable.pk.name() + ")";
-					sql += " ON DELETE CASCADE ON UPDATE CASCADE";
+					constraints += " ON DELETE CASCADE ON UPDATE CASCADE";
 				}
 		}
+		sql+=constraints;
 		sql += ");";
 		if (this.show_querries)
 			System.out.println(sql);
-
+		for (TableData assocTable : td.associatedTables.keySet())
+			batch.addAll(this.generateCreateTableQuery(assocTable, td));
 		batch.add(sql);
 		if (td.parentTable != null) {
 			batch.addAll(this.generateCreateTableQuery(td.parentTable, null));
 		}
-		for (TableData assocTable : td.associatedTables.keySet())
-			batch.addAll(this.generateCreateTableQuery(assocTable, td));
+
 		return batch;
 	}
 
@@ -296,8 +298,8 @@ public class SQLiteDBConenctor extends DBConnector {
 				if (rs.next()) {
 					generatedKey = rs.getObject(1);
 				}
-				
-				for(int j=1;j<createQuery.size();j++) {
+
+				for (int j = 1; j < createQuery.size(); j++) {
 					createsql = createQuery.get(j);
 					if (generatedKey != null) {
 						if (createQuery.get(j).contains(FOREIGN_KEY)) {
