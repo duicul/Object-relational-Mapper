@@ -114,6 +114,7 @@ public class MainTestSQLITE {
 		ws.add(new WhiteSUV("Audi1", "TM78IOP2", 12, 90, doors,trac));
 		StudentLiterature st = new StudentLiterature(ws, 7, "Meth", "Gogu", new Nota(8));
 		ol.insert(st);
+		//ol.dropTableStructure(StudentLiterature.class);
 		//TableData td = ClassMapper.getInstance().getTableData(StudentLiterature.class);
 		//System.out.println(td);
 	}

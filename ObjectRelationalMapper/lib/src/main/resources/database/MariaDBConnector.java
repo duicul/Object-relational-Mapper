@@ -23,7 +23,6 @@ public class MariaDBConnector extends DBConnector {
 	private long port;
 	private String hostname, username, password, database, driver;
 	private boolean show_querries;
-	
 
 	public MariaDBConnector(long port, String hostname, String username, String password, String database,
 			boolean show_querries) {
@@ -66,7 +65,8 @@ public class MariaDBConnector extends DBConnector {
 			 */
 		}
 		if (td.pk != null) {
-			sql += td.pk.name() + " " + td.pk.type() + " " + (td.pk.autoincrement() ? "AUTO_INCREMENT" : "") + "  NOT NULL , ";
+			sql += td.pk.name() + " " + td.pk.type() + " " + (td.pk.autoincrement() ? "AUTO_INCREMENT" : "")
+					+ "  NOT NULL , ";
 			sql += " PRIMARY KEY ( " + td.pk.name() + " ) ";
 		}
 		if (foreignTable != null) {
@@ -92,32 +92,26 @@ public class MariaDBConnector extends DBConnector {
 		if (this.show_querries)
 			System.out.println(sql);
 		for (TableData assocTable : td.associatedTables.keySet()) {
-			batch.addAll(this.generateCreateTableQuery(assocTable, td));}
+			batch.addAll(this.generateCreateTableQuery(assocTable, td));
+		}
 		batch.add(sql);
 		if (td.parentTable != null) {
 			batch.addAll(this.generateCreateTableQuery(td.parentTable, null));
 		}
-		
+
 		return batch;
 	}
 
 	@Override
-	public List<String> generateDeleteTableQuery(TableData td) {
-		List<String> query = new LinkedList<String>();
+	public String generateDeleteTableQuery(TableData td) {
 		String sql = "DROP TABLE " + td.table.name() + " ; ";
-		if (this.show_querries)
-			System.out.println(sql);
-		query.add(sql);
-		if (td.parentTable != null) {
-			query.addAll(this.generateDeleteTableQuery(td.parentTable));
-		}
-		return query;
+		return sql;
 	}
 
 	@Override
 	public String generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
 			throws IllegalArgumentException, IllegalAccessException {
-		//List<String> query = new LinkedList<String>();
+		// List<String> query = new LinkedList<String>();
 		TableData current = ClassMapper.getInstance().getTableData(subClass);
 		String sql = "INSERT INTO " + current.table.name();
 		String decl = "", val = "";
@@ -163,17 +157,16 @@ public class MariaDBConnector extends DBConnector {
 		decl += ")";
 		val += ")";
 		sql += decl + " VALUES " + val;
-		/*for (TableData forTab : current.associatedTables.keySet()) {
-			ForeignTable assocTable = current.associatedTables.get(forTab);
-			for (Object foreignObj : assocTable.getObjectsFromParent(o)) {
-				if (foreignObj != null)
-					query.addAll(this.generateCreateQuery(foreignObj, foreignObj.getClass(), current.class_name));
-			}
-		}
-		if (current.parentTable != null) {
-			query.addAll(this.generateCreateQuery(current.parentTable.class_name.cast(o),current.parentTable.class_name, current.parentTable.class_name));
-		}*/
-		//query.add(sql);
+		/*
+		 * for (TableData forTab : current.associatedTables.keySet()) { ForeignTable
+		 * assocTable = current.associatedTables.get(forTab); for (Object foreignObj :
+		 * assocTable.getObjectsFromParent(o)) { if (foreignObj != null)
+		 * query.addAll(this.generateCreateQuery(foreignObj, foreignObj.getClass(),
+		 * current.class_name)); } } if (current.parentTable != null) {
+		 * query.addAll(this.generateCreateQuery(current.parentTable.class_name.cast(o),
+		 * current.parentTable.class_name, current.parentTable.class_name)); }
+		 */
+		// query.add(sql);
 		if (this.show_querries)
 			System.out.println(sql);
 		/*

@@ -266,8 +266,8 @@ public class MariaDBtestQuery {
 	@Test
 	public void testDeleteTableQuery() {
 		try {
-			List<String> query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(Nota.class));
-			assertEquals(query.get(0), "DROP TABLE Nota ; ");
+			String query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(Nota.class));
+			assertEquals(query, "DROP TABLE Nota ; ");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -278,10 +278,8 @@ public class MariaDBtestQuery {
 	@Test
 	public void testDeleteTableQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
-			assertEquals(query.size(), 2);
-			assertEquals(query.get(0), "DROP TABLE SUV ; ");
-			assertEquals(query.get(1), "DROP TABLE Car ; ");
+			String query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
+			assertEquals(query, "DROP TABLE SUV ; ");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -292,12 +290,9 @@ public class MariaDBtestQuery {
 	@Test
 	public void testDeleteTableQuery3Hierarchy() {
 		try {
-			List<String> query = this.dbc
-					.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
-			assertEquals(query.size(), 3);
-			assertEquals(query.get(0), "DROP TABLE WhiteSUV ; ");
-			assertEquals(query.get(1), "DROP TABLE SUV ; ");
-			assertEquals(query.get(2), "DROP TABLE Car ; ");
+			String query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
+			assertEquals(query, "DROP TABLE WhiteSUV ; ");
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

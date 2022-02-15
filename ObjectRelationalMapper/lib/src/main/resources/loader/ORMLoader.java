@@ -25,6 +25,11 @@ public class ORMLoader {
 		return dbc.createTable(td);
 	}
 
+	public boolean dropTableStructure(Class<?> tableClass) {
+		TableData td = ClassMapper.getInstance().getTableData(tableClass);
+		return dbc.deleteTableHierarchy(td);
+	}
+	
 	public boolean dropTable(Class<?> tableClass) {
 		TableData td = ClassMapper.getInstance().getTableData(tableClass);
 		return dbc.deleteTable(td);
@@ -129,11 +134,11 @@ public class ORMLoader {
 		return this.delete(c);
 	}
 
-	public boolean update(Criteria c, Object o) {
-		return this.dbc.update(c, o);
+	public boolean updateSimple(Criteria c, Object o) {
+		return this.dbc.updateSimple(c, o);
 	}
 
-	public boolean update(Object o) {
+	public boolean updateSimple(Object o) {
 		Criteria c = this.createCriteria(o.getClass());
 		try {
 			for (TableData td = c.td; td != null; td = td.parentTable) {
@@ -143,6 +148,6 @@ public class ORMLoader {
 			e.printStackTrace();
 			return false;
 		}
-		return this.update(c, o);
+		return this.updateSimple(c, o);
 	}
 }

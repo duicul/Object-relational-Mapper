@@ -91,8 +91,8 @@ public class SQLitetestQuery {
 	@Test
 	public void testCreateQuery() {
 		try {
-			String query = this.dbc.generateCreateQuery(new Nota(4), Nota.class,null);
-			//assertEquals(query.size(),1);
+			String query = this.dbc.generateCreateQuery(new Nota(4), Nota.class, null);
+			// assertEquals(query.size(),1);
 			assertEquals(query, "INSERT INTO Nota (Value) VALUES  (4.0)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -105,34 +105,38 @@ public class SQLitetestQuery {
 	public void testCreateQuery2Hierarchy() {
 		try {
 			List<Door> doors = new LinkedList<Door>();
-			doors.add(new Door(13,14));
-			String query = this.dbc.generateCreateQuery(new SUV("BMW", "alb", "MH69KOL", 4, 120, doors, new Traction(7)),
-					SUV.class,null);
-			//assertEquals(query.size(),1);
+			doors.add(new Door(13, 14));
+			String query = this.dbc.generateCreateQuery(
+					new SUV("BMW", "alb", "MH69KOL", 4, 120, doors, new Traction(7)), SUV.class, null);
+			// assertEquals(query.size(),1);
 			assertEquals(query, "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , PARENT_KEY)");
-			/*assertEquals(query.get(1), "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , PARENT_FOREIGN_KEY)");
-			assertEquals(query.get(2), "INS");
-			assertEquals(query.get(3), "INS");*/
-		
+			/*
+			 * assertEquals(query.get(1),
+			 * "INSERT INTO SUV (HorsePower , Carcid) VALUES  (120 , PARENT_FOREIGN_KEY)");
+			 * assertEquals(query.get(2), "INS"); assertEquals(query.get(3), "INS");
+			 */
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			fail();
 		}
 	}
-	
+
 	@Test
 	public void testCreateQueryAssociationOtm() {
 		try {
 			List<Door> doors = new LinkedList<Door>();
-			doors.add(new Door(13,14));
-			doors.add(new Door(15,16));
-			String query = this.dbc.generateCreateQuery(new Car("BMW", "alb", "MH69KOL", 4, doors),
-					Car.class,null);
-			//assertEquals(query.size(),1);
-			assertEquals(query, "INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
-			//assertEquals(query.get(1), "INSERT INTO Door (Length,Width , Carcid) VALUES  (15,16 , FOREIGN_KEY)");
-			//assertEquals(query.get(2), "INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
+			doors.add(new Door(13, 14));
+			doors.add(new Door(15, 16));
+			String query = this.dbc.generateCreateQuery(new Car("BMW", "alb", "MH69KOL", 4, doors), Car.class, null);
+			// assertEquals(query.size(),1);
+			assertEquals(query,
+					"INSERT INTO Car (Model,Color,RegistrationNumber,Age) VALUES  ('BMW','alb','MH69KOL',4)");
+			// assertEquals(query.get(1), "INSERT INTO Door (Length,Width , Carcid) VALUES
+			// (15,16 , FOREIGN_KEY)");
+			// assertEquals(query.get(2), "INSERT INTO Car
+			// (Model,Color,RegistrationNumber,Age) VALUES ('BMW','alb','MH69KOL',4)");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -144,12 +148,12 @@ public class SQLitetestQuery {
 	public void testCreateQuery3Hierarchy() {
 		try {
 			String query = this.dbc.generateCreateQuery(new WhiteSUV("BMW", "MH69KOL", 4, 120, null, null),
-					WhiteSUV.class,null);
-			//assertEquals(query.size(),1);
+					WhiteSUV.class, null);
+			// assertEquals(query.size(),1);
 			assertEquals(query, "INSERT INTO WhiteSUV (SUVsid) VALUES  (PARENT_KEY)");
-			//assertEquals(query.get(1), "INS");
-			//assertEquals(query.get(2), "INS");
-			
+			// assertEquals(query.get(1), "INS");
+			// assertEquals(query.get(2), "INS");
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -260,8 +264,8 @@ public class SQLitetestQuery {
 	@Test
 	public void testDeleteTableQuery() {
 		try {
-			List<String> query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(Nota.class));
-			assertEquals(query.get(0), "DROP TABLE Nota ; ");
+			String query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(Nota.class));
+			assertEquals(query, "DROP TABLE Nota ; ");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -272,10 +276,9 @@ public class SQLitetestQuery {
 	@Test
 	public void testDeleteTableQuery2Hierarchy() {
 		try {
-			List<String> query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
+			String query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(SUV.class));
 
-			assertEquals(query.get(0), "DROP TABLE SUV ; ");
-			assertEquals(query.get(1), "DROP TABLE Car ; ");
+			assertEquals(query, "DROP TABLE SUV ; ");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -286,11 +289,8 @@ public class SQLitetestQuery {
 	@Test
 	public void testDeleteTableQuery3Hierarchy() {
 		try {
-			List<String> query = this.dbc
-					.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
-			assertEquals(query.get(0), "DROP TABLE WhiteSUV ; ");
-			assertEquals(query.get(1), "DROP TABLE SUV ; ");
-			assertEquals(query.get(2), "DROP TABLE Car ; ");
+			String query = this.dbc.generateDeleteTableQuery(ClassMapper.getInstance().getTableData(WhiteSUV.class));
+			assertEquals(query, "DROP TABLE WhiteSUV ; ");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

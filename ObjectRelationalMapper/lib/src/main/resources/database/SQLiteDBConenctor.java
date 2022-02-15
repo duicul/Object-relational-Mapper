@@ -88,16 +88,9 @@ public class SQLiteDBConenctor extends DBConnector {
 	}
 
 	@Override
-	public List<String> generateDeleteTableQuery(TableData td) {
-		List<String> query = new LinkedList<String>();
+	public String generateDeleteTableQuery(TableData td) {
 		String sql = "DROP TABLE " + td.table.name() + " ; ";
-		if (this.show_querries)
-			System.out.println(sql);
-		query.add(sql);
-		if (td.parentTable != null) {
-			query.addAll(this.generateDeleteTableQuery(td.parentTable));
-		}
-		return query;
+		return sql;
 	}
 
 	@Override
@@ -227,8 +220,6 @@ public class SQLiteDBConenctor extends DBConnector {
 		String tablejoin = " ";
 		String deleteSql = " DELETE ";
 		List<String> tables = new LinkedList<>();
-		List<String> batch = new LinkedList<String>();
-		List<String> assoc = new LinkedList<String>();
 		for (TableData parent = current.parentTable,
 				child = current; parent != null; child = parent, parent = parent.parentTable) {
 			tables.add(parent.table.name());
@@ -329,21 +320,4 @@ public class SQLiteDBConenctor extends DBConnector {
 			return false;
 		}
 	}*/
-
-	@Override
-	public boolean update(Criteria c, Object o) {
-		try {
-
-			Connection con = this.getConnection();
-			Statement stmt = con.createStatement();
-			List<String> query = this.generateUpdateQuery(c, o);
-			for (int i = query.size() - 1; i >= 0; i--)
-				stmt.addBatch(query.get(i));
-			stmt.executeBatch();
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
 }

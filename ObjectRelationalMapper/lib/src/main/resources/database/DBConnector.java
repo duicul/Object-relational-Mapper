@@ -2,6 +2,7 @@ package database;
 
 import criteria.Criteria;
 import exception.ForeignKeyReplacementError;
+import exception.ObjectNotReadError;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
@@ -59,11 +60,29 @@ public abstract class DBConnector {
 		try {
 			Connection con = this.getConnection();
 			Statement stmt = con.createStatement();
-			List<String> sql = this.generateDeleteTableQuery(current);
-			for (String query : sql)
-				stmt.addBatch(query);
-			stmt.executeBatch();
-			;
+			String sql = this.generateDeleteTableQuery(current);
+			System.out.println(sql);
+			stmt.executeUpdate(sql);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean deleteTableHierarchy(TableData current) {
+		try {
+			Connection con = this.getConnection();
+			Statement stmt = con.createStatement();
+			for (TableData assocTable : current.associatedTables.keySet()) {
+				this.deleteTableHierarchy(assocTable);
+			}
+			String sql = this.generateDeleteTableQuery(current);
+			System.out.println(sql);
+			stmt.executeUpdate(sql);
+			if (current.parentTable != null) {
+				this.deleteTableHierarchy(current.parentTable);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -251,23 +270,63 @@ public abstract class DBConnector {
 	 * @param o
 	 * @return
 	 */
-	public boolean update(Criteria c, Object o) {
-		try {
+	public boolean updateSimple(Criteria c, Object o) {
+		//List<Object> objs;
+		this.delete(c);
+		this.create(o, o.getClass(), null);
 
-			Connection con = this.getConnection();
-			Statement stmt = con.createStatement();
-			List<String> query = this.generateUpdateQuery(c, o);
-			if (query.size() > 0) {
-				String sql = query.get(0);
-				stmt.executeUpdate(sql);
-				return true;
-			} else
-				return false;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+		/*
+		 * objs = this.read(c); for (Object ob : objs) { this.update(ob); }
+		 */
+		return true;
 	}
+
+	protected Object updateKeyValues(Object old, Object valueObject) {
+		TableData td = ClassMapper.getInstance().getTableData(old.getClass());
+		Object pkValue;
+		try {
+			pkValue = td.pk_field.get(old);
+			td.pk_field.set(valueObject, pkValue);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		return valueObject;
+	}
+
+	/*
+	 * public boolean update(Object objNewValues, Object objOldValues) throws
+	 * ObjectNotReadError { TableData td =
+	 * ClassMapper.getInstance().getTableData(objOldValues.getClass()); try { Object
+	 * pkValue; pkValue = td.pk_field.get(objOldValues); if ((int) pkValue == 0 ||
+	 * pkValue == null) { throw new
+	 * ObjectNotReadError(objOldValues.getClass().toString()); } } catch
+	 * (IllegalArgumentException | IllegalAccessException e1) { throw new
+	 * ObjectNotReadError(objOldValues.getClass().toString()); } ORMLoader ol = new
+	 * ORMLoader(this); Criteria mainCrit =
+	 * ol.createCriteria(objOldValues.getClass()); try { for (TableData parent =
+	 * td.parentTable, child = td; child != null; child = parent, parent = parent ==
+	 * null ? null : parent.parentTable) { mainCrit.eq(child.pk.name(),
+	 * child.pk_field.get(objOldValues));
+	 * 
+	 * for (TableData assoctd : child.associatedTables.keySet()) { Object foreObjOld
+	 * = child.associatedTables.get(assoctd).f.get(objOldValues); Object foreObjNew
+	 * = child.associatedTables.get(assoctd).f.get(objNewValues); Criteria
+	 * asssocCrit = ol.createCriteria(foreObjOld.getClass());
+	 * //asssocCrit.equals(foreObjOld); if (foreObjOld != null) { if
+	 * (child.associatedTables.get(assoctd).oto != null)
+	 * this.update(foreObjOld,foreObjNew); else if
+	 * (child.associatedTables.get(assoctd).otm != null) { List<Object> lotm =
+	 * (List<Object>) foreObj; for (Object ob : lotm) { this.update(ob); } } } } }
+	 * 
+	 * Connection con; con = this.getConnection();
+	 * 
+	 * Statement stmt = con.createStatement(); List<String> sql =
+	 * this.generateUpdateQuery(mainCrit, o); for (String query : sql)
+	 * stmt.addBatch(query); System.out.println(sql); stmt.executeBatch(); } catch
+	 * (Exception e) { e.printStackTrace(); return false; } return false; }
+	 */
 
 	/**
 	 * Delete data from joined tables (inheritance) using a criteria
@@ -292,11 +351,8 @@ public abstract class DBConnector {
 	}
 
 	protected boolean delete(Object o) {
-		Connection con;
-		try {
-			con = this.getConnection();
 
-			Statement stmt = con.createStatement();
+		try {
 
 			TableData td = ClassMapper.getInstance().getTableData(o.getClass());
 			ORMLoader ol = new ORMLoader(this);
@@ -319,9 +375,12 @@ public abstract class DBConnector {
 							}
 						}
 					}
-
 				}
 			}
+			Connection con;
+			con = this.getConnection();
+
+			Statement stmt = con.createStatement();
 			String sql = this.generateDeleteQuery(mainCrit);
 			System.out.println(sql);
 			stmt.executeUpdate(sql);
@@ -335,7 +394,7 @@ public abstract class DBConnector {
 
 	public abstract List<String> generateCreateTableQuery(TableData td, TableData foreignTable);
 
-	public abstract List<String> generateDeleteTableQuery(TableData td);
+	public abstract String generateDeleteTableQuery(TableData td);
 
 	public abstract String generateCreateQuery(Object o, Class<?> subClass, Class<?> foreignTable)
 			throws IllegalArgumentException, IllegalAccessException;
